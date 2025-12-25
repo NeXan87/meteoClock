@@ -676,26 +676,6 @@ void clockTick() {
 
   if (mode == 0) {                                     // Точки и статус питания (с)НР ---------------------------------------------------
 
-    if (!bigDig && powerStatus != 255 && DISPLAY_TYPE == 1) {          // отображаем статус питания (с)НР
-
-      if (analogRead(A1) > 900 || analogRead(A0) < 300 || (analogRead(A1) < 300 && analogRead(A0) < 300)) powerStatus = 0;
-      else powerStatus = (constrain((int)analogRead(A0) * 5.2 / 1023.0, 3.0, 4.2) - 3.0) / ((4.2 - 3.0) / 6.0) + 1;
-
-      if (powerStatus) {
-        for (byte i = 2; i <= 6; i++) {         // рисуем уровень заряда батареи (с)НР
-          if ((7 - powerStatus) < i) DC[i] = 0b11111;
-          else DC[i] = 0b10001;
-        }
-        lcd.createChar(6, DC);
-      } else lcd.createChar(6, AC);
-
-      if (mode0scr != 1) lcd.setCursor(19, 2);
-      else lcd.setCursor(19, 0);
-      if (!dotFlag && powerStatus == 1) lcd.write(32);
-      else lcd.write(6);
-    }
-    //Serial.print("Значение: " + String(analogRead(A0))); Serial.print(" Напряжение0: " + String(analogRead(A0) * 5.2 / 1023.0)); Serial.print(" Напряжение1: " + String(analogRead(A1) * 5.2 / 1023.0)); Serial.print(" Статус: " + String(powerStatus));  Serial.println(" Статус2: " + String((constrain((int)analogRead(A0) * 5.0 / 1023.0, 3.0, 4.2) - 3.0) / ((4.2 - 3.0) / 6.0) + 1)); //отладка (с)НР
-
     byte code;
     if (dotFlag) code = 165;
     else code = 32;
