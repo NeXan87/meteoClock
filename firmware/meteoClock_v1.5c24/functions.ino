@@ -451,7 +451,7 @@ void redrawPlot() {
 
 void readSensors() {
   bme.takeForcedMeasurement();
-  dispTemp = bme.readTemperature();
+  dispTemp = bme.readTemperature() + TEMP_OFFSET;
   dispHum = bme.readHumidity();
   dispAlt = ((float)dispAlt * 1 + bme.readAltitude(SEALEVELPRESSURE_HPA)) / 2;  // усреднение, чтобы не было резких скачков (с)НР
   dispPres = (float)bme.readPressure() * 0.00750062;
@@ -473,7 +473,7 @@ void drawSensors() {
       if (mode0scr == 1) lcd.setCursor(15, 2);
       if (mode0scr != 1) lcd.setCursor(15, 0);
     }
-    lcd.print(String(dispTemp, 1));
+    lcd.print((int)round(dispTemp));
     lcd.write(239);
   } else {
     drawTemp(dispTemp, 0, 0);
