@@ -1,22 +1,37 @@
 void checkBrightness() {
-  if (LCD_BRIGHT == 11) {                        // если установлен автоматический режим для экрана (с)НР
-    if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {  // если темно
+  int photoValue = analogRead(PHOTO);
+  static bool isDark = false;
+
+  if (isDark) {
+    // Сейчас темно → переключаемся в "светло", только если сигнал УВЕРЕННО выше порога
+    if (photoValue > BRIGHT_THRESHOLD + BRIGHT_HYSTERESYS) {
+      isDark = false;
+    }
+  } else {
+    // Сейчас светло → переключаемся в "темно", только если сигнал УВЕРЕННО ниже порога
+    if (photoValue < BRIGHT_THRESHOLD - BRIGHT_HYSTERESYS) {
+      isDark = true;
+    }
+  }
+
+  if (LCD_BRIGHT == 11) {
+    if (isDark) {
       analogWrite(BACKLIGHT, LCD_BRIGHT_MIN);
-    } else {  // если светло
+    } else {
       analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
     }
   } else {
     analogWrite(BACKLIGHT, LCD_BRIGHT * LCD_BRIGHT * 2.5);
   }
 
-  if (LED_BRIGHT == 11) {                        // если установлен автоматический режим для индикатора (с)НР
-    if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {  // если темно
+  if (LED_BRIGHT == 11) {
+    if (isDark) {
 #if (LED_MODE == 0)
       LED_ON = (LED_BRIGHT_MIN);
 #else
       LED_ON = (255 - LED_BRIGHT_MIN);
 #endif
-    } else {  // если светло
+    } else {
 #if (LED_MODE == 0)
       LED_ON = (LED_BRIGHT_MAX);
 #else
