@@ -3,10 +3,13 @@
 
 // Укажите ваш I2C-адрес (обычно 0x27 или 0x3F)
 LiquidCrystal_I2C lcd(0x27, 20, 4);
+#define BACKLIGHT 10
 
 void setup() {
+  pinMode(BACKLIGHT, OUTPUT);
   lcd.init();
   lcd.backlight();
+  digitalWrite(BACKLIGHT, HIGH);
 }
 
 void loop() {
