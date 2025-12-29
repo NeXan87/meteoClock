@@ -1,3 +1,5 @@
+#include "config.h"
+
 void checkBrightness() {
   int photoValue = analogRead(PHOTO);
   static bool isDark = false;
