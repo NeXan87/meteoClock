@@ -3,11 +3,11 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 
-#include "RTClib.h"
 #include "bme.h"
 #include "button.h"
 #include "co2.h"
 #include "config.h"
+#include "rtc.h"
 
 #if (LED_MODE == 0)
 byte LED_ON = (LED_BRIGHT_MAX);
@@ -55,9 +55,6 @@ LiquidCrystal_I2C lcd(DISPLAY_ADDR, 20, 4);
 LiquidCrystal_I2C lcd(DISPLAY_ADDR, 16, 2);
 #endif
 
-RTC_DS3231 rtc;
-DateTime now;
-
 unsigned long sensorsTimer = SENS_TIME;
 unsigned long drawSensorsTimer = SENS_TIME;
 unsigned long clockTimer = 500;
@@ -86,7 +83,7 @@ unsigned long brightTimerD = 0;
 
 // Модуль кнопки реализован в src/button.cpp/h
 
-int8_t hrs, mins, secs;
+uint8_t hrs, mins, secs;
 byte mode = 0;
 /*
   0 часы и данные
@@ -722,10 +719,10 @@ void loadClock() {
         lcd.createChar(5, LM2);
     }
 
-    if (now.dayOfTheWeek() == 4) {  // Для четверга в ячейку запоминаем "Ч", для
-                                    // субботы "Б", иначе "П" (с)НР
-        lcd.createChar(7, CH);      // Ч (с)НР
-    } else if (now.dayOfTheWeek() == 6) {
+    if (getRtcDayOfWeek() == 4) {  // Для четверга в ячейку запоминаем "Ч", для
+                                   // субботы "Б", иначе "П" (с)НР
+        lcd.createChar(7, CH);     // Ч (с)НР
+    } else if (getRtcDayOfWeek() == 6) {
         lcd.createChar(7, BB);  // Б (с)НР
     } else {
         lcd.createChar(7, PP);  // П (с)НР
@@ -739,20 +736,20 @@ void drawData() {  // выводим дату
     if (!bigDig) {  // если 4-х строчные цифры, то дату, день недели (и секунды)
                     // не пишем - некуда (с)НР
         lcd.setCursor(15, 0 + Y);
-        if (now.day() < 10) lcd.print(0);
-        lcd.print(now.day());
+        if (getRtcDay() < 10) lcd.print(0);
+        lcd.print(getRtcDay());
         lcd.print(".");
-        if (now.month() < 10) lcd.print(0);
-        lcd.print(now.month());
+        if (getRtcMonth() < 10) lcd.print(0);
+        lcd.print(getRtcMonth());
 
         if (DISP_MODE == 0) {
             lcd.setCursor(16, 1);
-            lcd.print(now.year());
+            lcd.print(getRtcYear());
         } else {
             loadClock();  // принудительно обновляем знаки, т.к. есть жалобы на
                           // необновление знаков в днях недели (с)НР
             lcd.setCursor(18, 1);
-            int dayofweek = now.dayOfTheWeek();
+            int dayofweek = getRtcDayOfWeek();
             lcd.print(dayNames[dayofweek]);
             // if (hrs == 0 && mins == 0 && secs <= 1) loadClock();   // Обновляем
             // знаки, чтобы русские буквы в днях недели тоже обновились. (с)НР
@@ -1428,10 +1425,10 @@ void clockTick() {
         if (mins > 59) {  // каждый час
             // loadClock();        // Обновляем знаки, чтобы русские буквы в днях
             // недели тоже обновились. (с)НР
-            now = rtc.now();
-            secs = now.second();
-            mins = now.minute();
-            hrs = now.hour();
+            updateRtc();
+            secs = getRtcSeconds();
+            mins = getRtcMinutes();
+            hrs = getRtcHours();
             if (mode == 0) drawSensors();
             if (hrs > 23) hrs = 0;
             if (mode == 0 && DISPLAY_TYPE) drawData();
@@ -1540,7 +1537,7 @@ void setup() {
     lcd.print(F("RTC... "));
     Serial.print(F("RTC... "));
     delay(50);
-    if (rtc.begin()) {
+    if (initRtc()) {
         lcd.print(F("OK"));
         Serial.println(F("OK"));
     } else {
@@ -1587,16 +1584,13 @@ void setup() {
 #if (CO2_SENSOR == 1)
     initCo2();
 #endif
-    rtc.begin();
+    initRtc();
 #endif
     initBme();
-    if (RESET_CLOCK || rtc.lostPower())
-        rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     lcd.clear();
-    now = rtc.now();
-    secs = now.second();
-    mins = now.minute();
-    hrs = now.hour();
+    secs = getRtcSeconds();
+    mins = getRtcMinutes();
+    hrs = getRtcHours();
 
     updateBme();
     uint32_t Pressure = getBmePressure();
