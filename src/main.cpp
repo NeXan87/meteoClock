@@ -8,6 +8,7 @@
 #include "co2.h"
 #include "config.h"
 #include "led.h"
+#include "predict.h"
 #include "rtc.h"
 
 byte LCD_BRIGHT =
@@ -54,7 +55,6 @@ unsigned long hourPlotTimer = ((long)5 * 60 * 1000);      // 5 минуты
 unsigned long dayPlotTimer = ((long)2 * 60 * 60 * 1000);  // 2 часа
 #endif
 
-unsigned long predictTimer = ((long)10 * 60 * 1000);  // 10 минут
 unsigned long plotTimer = hourPlotTimer;
 unsigned long brightTimer = (2000);
 
@@ -64,7 +64,6 @@ unsigned long clockTimerD = 0;
 unsigned long hourPlotTimerD = 0;
 unsigned long dayPlotTimerD = 0;
 unsigned long plotTimerD = 0;
-unsigned long predictTimerD = 0;
 unsigned long brightTimerD = 0;
 
 // Модуль кнопки реализован в src/button.cpp/h
@@ -103,7 +102,6 @@ float dispTemp;
 float dispHum;
 float dispPres;
 int dispCO2 = -1;
-int dispRain;
 float dispAlt;  // int
 
 // массивы графиков
@@ -619,8 +617,8 @@ void drawSensors() {
         lcd.setCursor(5, 3);
         lcd.print(" rain     ");
         lcd.setCursor(11, 3);
-        if (dispRain < 0) lcd.setCursor(10, 3);
-        lcd.print(String(dispRain) + "%");
+        if (getPredictRain() < 0) lcd.setCursor(10, 3);
+        lcd.print(String(getPredictRain()) + "%");
     }
 
     if (mode0scr != 0) {  // время (с)НР ----------------------------
@@ -650,7 +648,7 @@ void drawSensors() {
 
         lcd.setCursor(0, 1);
         lcd.print(String(dispPres) + " mm  rain ");
-        lcd.print(String(dispRain) + "% ");
+        lcd.print(String(getPredictRain()) + "% ");
     } else {  // для крупных цифр (с)НР
         switch (mode0scr) {
             case 0:
@@ -1250,12 +1248,11 @@ void plotSensorsTick() {
         tempHour[14] = dispTemp;
         humHour[14] = dispHum;
         pressHour[14] = dispPres;
-        //    rainHour[14] = dispRain;
         altHour[14] = dispAlt;
         co2Hour[14] = dispCO2;
 
         if (PRESSURE)
-            pressHour[14] = dispRain;
+            pressHour[14] = getPredictRain();
         else
             pressHour[14] = dispPres;
     }
@@ -1296,49 +1293,7 @@ void plotSensorsTick() {
         co2Day[14] = averCO2;
     }
 
-    // 10 минутный таймер
-    if (testTimer(predictTimerD, predictTimer)) {
-        // тут делаем линейную аппроксимацию для предсказания погоды
-        long averPress = 0;
-        for (byte i = 0; i < 10; i++) {
-            updateBme();
-            averPress += getBmePressure();
-            delay(1);
-        }
-        averPress /= 10;
-
-        for (byte i = 0; i < 5;
-             i++) {  // счётчик от 0 до 5 (да, до 5. Так как 4 меньше 5)
-            pressure_array[i] =
-                pressure_array[i + 1];  // сдвинуть массив давлений КРОМЕ ПОСЛЕДНЕЙ
-                                        // ЯЧЕЙКИ на шаг назад
-        }
-        pressure_array[5] =
-            averPress;  // последний элемент массива теперь - новое давление
-        sumX = 0;
-        sumY = 0;
-        sumX2 = 0;
-        sumXY = 0;
-        for (int i = 0; i < 6; i++) {  // для всех элементов массива
-            // sumX += time_array[i];
-            sumX += i;
-            sumY += (long)pressure_array[i];
-            // sumX2 += time_array[i] * time_array[i];
-            sumX2 += i * i;
-            // sumXY += (long)time_array[i] * pressure_array[i];
-            sumXY += (long)i * pressure_array[i];
-        }
-        a = 0;
-        a = (long)6 * sumXY;  // расчёт коэффициента наклона приямой
-        a = a - (long)sumX * sumY;
-        a = (float)a / (6 * sumX2 - sumX * sumX);
-        delta = a * 6;  // расчёт изменения давления
-        dispRain =
-            map(delta, -250, 250, 100,
-                -100);  // пересчитать в проценты
-                        // Serial.println(String(pressure_array[5]) + " " +
-                        // String(delta) + " " + String(dispRain));   // дебаг
-    }
+    updatePredict();
 }
 
 boolean dotFlag;
@@ -1417,6 +1372,7 @@ void setup() {
     pinMode(BACKLIGHT, OUTPUT);
     analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
     initLed();
+    initPredict();
 
     if (EEPROM.read(0) ==
         122) {  // если было сохранение настроек, то восстанавливаем их (с)НР

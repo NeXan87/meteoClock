@@ -2,23 +2,16 @@
 
 #include "bme.h"
 #include "co2.h"
-#include "config.h"
+#include "predict.h"
 #include "rtc.h"
 
 // Внутренние переменные (инкапсулированы)
-static byte ledType = 0;     //  при отсутствии сохранения в EEPROM: привязка индикатора к датчикам:
-                             //  0 - СО2, 1 - Влажность, 2 - Температура, 3 - Осадки
-static byte ledBright = 10;  // при отсутствии сохранения в EEPROM: яркость светодиода СО2 (0 - 10)
-                             // (коэффициент настраиваемой яркости индикатора по умолчанию, если нет
-                             // сохранения и не автоматическая регулировка (с)НР)
+static LedIndicatorMode ledType = LED_MODE_CO2;  //  при отсутствии сохранения в EEPROM: привязка индикатора к датчикам:
+                                                 //  0 - СО2, 1 - Влажность, 2 - Температура, 3 - Осадки
+static byte ledBright = 10;                      // при отсутствии сохранения в EEPROM: яркость светодиода СО2 (0 - 10)
+                                                 // (коэффициент настраиваемой яркости индикатора по умолчанию, если нет
+                                                 // сохранения и не автоматическая регулировка (с)НР)
 static bool ledInitialized = false;
-static bool ambientIsDark = false;
-
-float dispTemp = getBmeTemperature();
-float dispHum = getBmeHumidity();
-float dispPres = getBmePressure() * PA_TO_MMHG;
-int dispCO2 = getCo2Ppm();
-extern int dispRain;
 
 void initLed() {
     pinMode(LED_COM, OUTPUT);
@@ -48,10 +41,16 @@ static byte computeLedOn() {
 void updateLed() {
     if (!ledInitialized) return;
 
+    float dispTemp = getBmeTemperature();
+    float dispHum = getBmeHumidity();
+    float dispPres = getBmePressure() * PA_TO_MMHG;
+    int dispCO2 = getCo2Ppm();
+    int currentRain = getPredictRain();
+
     byte color = 12;  // зелёный по умолчанию
 
     // Определяем цвет в зависимости от типа индикации и текущих значений
-    if (ledType == 0) {                           // CO2
+    if (ledType == LED_MODE_CO2) {
         if (dispCO2 >= maxCO2) color = 3;         // красный
         else if (dispCO2 >= normCO2) color = 48;  // синий
         else color = 12;                          // зелёный
@@ -60,7 +59,7 @@ void updateLed() {
             return;
         }
 
-    } else if (ledType == 1) {  // Влажность
+    } else if (ledType == LED_MODE_HUMIDITY) {
         if (dispHum <= minHum) color = 3;
         else if (dispHum <= normHum) color = 48;
         else if (dispHum <= maxHum) color = 12;
@@ -70,7 +69,7 @@ void updateLed() {
             return;
         }
 
-    } else if (ledType == 2) {  // Температура
+    } else if (ledType == LED_MODE_TEMPERATURE) {
         if (dispTemp >= maxTemp) color = 3;
         else if (dispTemp >= normTemp) color = 48;
         else color = 12;
@@ -79,12 +78,12 @@ void updateLed() {
             return;
         }
 
-    } else if (ledType == 3) {  // Осадки
-        if (dispRain <= minRain) color = 3;
-        else if (dispRain <= normRain) color = 48;
+    } else if (ledType == LED_MODE_RAIN) {
+        if (currentRain <= minRain) color = 3;
+        else if (currentRain <= normRain) color = 48;
         else color = 12;
 
-    } else if (ledType == 4) {  // Давление
+    } else if (ledType == LED_MODE_PRESSURE) {
         if (dispPres <= minPress) color = 3;
         else if (dispPres <= normPress) color = 48;
         else color = 12;
@@ -104,6 +103,8 @@ void setLedColor(byte color) {
 }
 
 void notifyAmbientLight(bool isDark) {
+    static bool ambientIsDark = false;
+
     if (ambientIsDark != isDark) {
         ambientIsDark = isDark;
         if (ledBright == 11) {
@@ -114,7 +115,20 @@ void notifyAmbientLight(bool isDark) {
 
 // ------------------------------------------------------------
 // Геттеры/сеттеры для связи с меню
-void setLedType(byte type) { ledType = type; }
-void setLedBrightness(byte brightness) { ledBright = brightness; }
-byte getLedType() { return ledType; }
-byte getLedBrightness() { return ledBright; }
+void setLedType(byte type) {
+    if (type <= 4) {
+        ledType = static_cast<LedIndicatorMode>(type);
+    }
+}
+
+void setLedBrightness(byte brightness) {
+    ledBright = brightness;
+}
+
+byte getLedType() {
+    return static_cast<byte>(ledType);
+}
+
+byte getLedBrightness() {
+    return ledBright;
+}

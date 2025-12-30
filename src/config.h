@@ -141,3 +141,12 @@
 #define LED_G 6       // Зелёный канал (ШИМ)
 #define LED_B 5       // Синий канал (ШИМ)
 #define BTN_PIN 4     // Кнопка управления
+
+// Типы индикации светодиода
+enum LedIndicatorMode {
+    LED_MODE_CO2,
+    LED_MODE_HUMIDITY,
+    LED_MODE_TEMPERATURE,
+    LED_MODE_RAIN,
+    LED_MODE_PRESSURE
+};
