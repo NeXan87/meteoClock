@@ -1,5 +1,4 @@
-#ifndef BME_H
-#define BME_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -10,5 +9,3 @@ float getBmeTemperature();
 float getBmeHumidity();
 float getBmePressure();  // возвращается в Pa
 float getBmeAltitude();  // в метрах
-
-#endif

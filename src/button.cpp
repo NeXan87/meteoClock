@@ -2,7 +2,7 @@
 
 #include "config.h"
 
-GButton btn(BTN_PIN, LOW_PULL, NORM_OPEN);
+static GButton btn(BTN_PIN, LOW_PULL, NORM_OPEN);
 
 void updateButton() {
     btn.tick();

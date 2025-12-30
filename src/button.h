@@ -1,5 +1,4 @@
-#ifndef BUTTON_H
-#define BUTTON_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -13,5 +12,3 @@ bool isSingleButton();
 bool isDoubleButton();
 bool isTripleButton();
 bool isHoldedButton();
-
-#endif

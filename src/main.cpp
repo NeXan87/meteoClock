@@ -6,11 +6,8 @@
 #include "RTClib.h"
 #include "bme.h"
 #include "button.h"
+#include "co2.h"
 #include "config.h"
-
-#if (CO2_SENSOR == 1)
-#include <MHZ19_uart.h>
-#endif
 
 #if (LED_MODE == 0)
 byte LED_ON = (LED_BRIGHT_MAX);
@@ -60,10 +57,6 @@ LiquidCrystal_I2C lcd(DISPLAY_ADDR, 16, 2);
 
 RTC_DS3231 rtc;
 DateTime now;
-
-#if (CO2_SENSOR == 1)
-MHZ19_uart mhz19;
-#endif
 
 unsigned long sensorsTimer = SENS_TIME;
 unsigned long drawSensorsTimer = SENS_TIME;
@@ -1299,7 +1292,7 @@ void readSensors() {
     dispAlt = ((float)dispAlt * 1 + getBmeAltitude()) / 2;  // усреднение, чтобы не было резких скачков (с)НР
     dispPres = getBmePressure() * PA_TO_MMHG;
 #if (CO2_SENSOR == 1)
-    dispCO2 = mhz19.getPPM();
+    dispCO2 = getCo2Ppm();
 #else
     dispCO2 = 0;
 #endif
@@ -1529,11 +1522,10 @@ void setup() {
     lcd.setCursor(0, 0);
     lcd.print(F("MHZ-19... "));
     Serial.print(F("MHZ-19... "));
-    mhz19.begin(MHZ_TX, MHZ_RX);
-    mhz19.setAutoCalibration(false);
-    mhz19.getStatus();  // первый запрос, в любом случае возвращает -1
+    initCo2();
+    getStatus();  // первый запрос, в любом случае возвращает -1
     delay(500);
-    if (mhz19.getStatus() == 0) {
+    if (getStatus() == 0) {
         lcd.print(F("OK"));
         Serial.println(F("OK"));
     } else {
@@ -1593,8 +1585,7 @@ void setup() {
 #else
 
 #if (CO2_SENSOR == 1)
-    mhz19.begin(MHZ_TX, MHZ_RX);
-    mhz19.setAutoCalibration(false);
+    initCo2();
 #endif
     rtc.begin();
 #endif
