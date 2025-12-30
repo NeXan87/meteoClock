@@ -6,9 +6,6 @@
 
 static RTC_DS3231 rtc;
 static DateTime now;
-static uint8_t cachedHours = 0;
-static uint8_t cachedMinutes = 0;
-static uint8_t cachedSeconds = 0;
 
 bool initRtc() {
     if (!rtc.begin()) {
@@ -25,21 +22,18 @@ bool initRtc() {
 
 void updateRtc() {
     now = rtc.now();
-    cachedHours = now.hour();
-    cachedMinutes = now.minute();
-    cachedSeconds = now.second();
 }
 
 uint8_t getRtcHours() {
-    return cachedHours;
+    return now.hour();
 }
 
 uint8_t getRtcMinutes() {
-    return cachedMinutes;
+    return now.minute();
 }
 
 uint8_t getRtcSeconds() {
-    return cachedSeconds;
+    return now.second();
 }
 
 uint8_t getRtcDay() {

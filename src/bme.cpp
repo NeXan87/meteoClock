@@ -9,10 +9,6 @@
 static Adafruit_BME280 bme;
 
 static bool bmeInitialized = false;
-static float cachedTemp = 0.0f;
-static float cachedHum = 0.0f;
-static float cachedPres = 0.0f;  // в Pa
-static float cachedAlt = 0.0f;   // в метрах
 
 bool initBme() {
     if (!bme.begin(&Wire)) {
@@ -33,24 +29,20 @@ bool initBme() {
 void updateBme() {
     if (!bmeInitialized) return;
     bme.takeForcedMeasurement();
-    cachedTemp = bme.readTemperature() + TEMP_OFFSET;
-    cachedHum = bme.readHumidity();
-    cachedPres = bme.readPressure();                       // Pa
-    cachedAlt = bme.readAltitude(SEA_LEVEL_PRESSURE_HPA);  // м
 }
 
 float getBmeTemperature() {
-    return cachedTemp;
+    return bme.readTemperature() + TEMP_OFFSET;
 }
 
 float getBmeHumidity() {
-    return cachedHum;
+    return bme.readHumidity();
 }
 
 float getBmePressure() {
-    return cachedPres;
+    return bme.readPressure();
 }
 
 float getBmeAltitude() {
-    return cachedAlt;
+    return bme.readAltitude(SEA_LEVEL_PRESSURE_HPA);
 }

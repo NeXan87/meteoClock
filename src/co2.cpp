@@ -6,7 +6,6 @@
 
 static MHZ19_uart mhz;
 static bool co2Initialized = false;
-static int cachedPpm = 0;
 
 bool initCo2() {
     mhz.begin(MHZ_TX, MHZ_RX);
@@ -18,11 +17,10 @@ bool initCo2() {
 
 void updateCo2() {
     if (!co2Initialized) return;
-    cachedPpm = mhz.getPPM();
 }
 
 int getCo2Ppm() {
-    return cachedPpm;
+    return mhz.getPPM();
 }
 
 int getStatus() {
