@@ -1,12 +1,11 @@
-#include <Adafruit_BME280.h>
-#include <Adafruit_Sensor.h>
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 
-#include "button.h"
 #include "RTClib.h"
+#include "bme.h"
+#include "button.h"
 #include "config.h"
 
 #if (CO2_SENSOR == 1)
@@ -61,7 +60,6 @@ LiquidCrystal_I2C lcd(DISPLAY_ADDR, 16, 2);
 
 RTC_DS3231 rtc;
 DateTime now;
-Adafruit_BME280 bme;
 
 #if (CO2_SENSOR == 1)
 MHZ19_uart mhz19;
@@ -126,8 +124,8 @@ boolean bigDig = false;  // true - цифры на главном экране �
 
 // переменные для вывода
 float dispTemp;
-byte dispHum;
-int dispPres;
+float dispHum;
+float dispPres;
 int dispCO2 = -1;
 int dispRain;
 float dispAlt;  // int
@@ -149,22 +147,6 @@ int delta;
 uint32_t pressure_array[6];
 uint32_t sumX, sumY, sumX2, sumXY;
 float a, b;
-// byte time_array[6];
-
-/*
-  Характеристики датчика BME:
-  Температура: от-40 до + 85 °C
-  Влажность: 0-100%
-  Давление: 300-1100 hPa (225-825 ммРтСт)
-  Разрешение:
-  Температура: 0,01 °C
-  Влажность: 0.008%
-  Давление: 0,18 Pa
-  Точность:
-  Температура: +-1 °C
-  Влажность: +-3%
-  Давление: +-1 Па
-*/
 
 // символы
 // график
@@ -673,9 +655,6 @@ void drawSensors() {
         lcd.setCursor(11, 3);
         if (dispRain < 0) lcd.setCursor(10, 3);
         lcd.print(String(dispRain) + "%");
-        //  lcd.setCursor(14, 3);
-        //  lcd.print(bme.readAltitude(SEALEVELPRESSURE_HPA));  // высота над
-        //  уровнем моря (с)НР
     }
 
     if (mode0scr != 0) {  // время (с)НР ----------------------------
@@ -1018,7 +997,7 @@ void modesTick() {
             changeFlag = true;
         }
     }
-    if (isDoubleButton()) {            // двойное нажатие (с)НР ----------------------------
+    if (isDoubleButton()) {           // двойное нажатие (с)НР ----------------------------
         if (mode > 0 && mode < 11) {  // Меняет пределы графика на
                                       // установленные/фактические максимумы (с)НР
             MAX_ONDATA = (int)MAX_ONDATA ^ (1 << (mode - 1));
@@ -1314,12 +1293,11 @@ void modesTick() {
 }
 
 void readSensors() {
-    bme.takeForcedMeasurement();
-    dispTemp = bme.readTemperature() + TEMP_OFFSET;
-    dispHum = bme.readHumidity();
-    dispAlt = ((float)dispAlt * 1 + bme.readAltitude(SEALEVELPRESSURE_HPA)) /
-              2;  // усреднение, чтобы не было резких скачков (с)НР
-    dispPres = (float)bme.readPressure() * 0.00750062;
+    updateBme();
+    dispTemp = getBmeTemperature();
+    dispHum = getBmeHumidity();
+    dispAlt = ((float)dispAlt * 1 + getBmeAltitude()) / 2;  // усреднение, чтобы не было резких скачков (с)НР
+    dispPres = getBmePressure() * PA_TO_MMHG;
 #if (CO2_SENSOR == 1)
     dispCO2 = mhz19.getPPM();
 #else
@@ -1402,8 +1380,8 @@ void plotSensorsTick() {
         // тут делаем линейную аппроксимацию для предсказания погоды
         long averPress = 0;
         for (byte i = 0; i < 10; i++) {
-            bme.takeForcedMeasurement();
-            averPress += bme.readPressure();
+            updateBme();
+            averPress += getBmePressure();
             delay(1);
         }
         averPress /= 10;
@@ -1584,7 +1562,7 @@ void setup() {
     lcd.print(F("BME280... "));
     Serial.print(F("BME280... "));
     delay(50);
-    if (bme.begin(&Wire)) {
+    if (initBme()) {
         lcd.print(F("OK"));
         Serial.println(F("OK"));
     } else {
@@ -1619,15 +1597,8 @@ void setup() {
     mhz19.setAutoCalibration(false);
 #endif
     rtc.begin();
-    bme.begin(&Wire);
 #endif
-
-    bme.setSampling(Adafruit_BME280::MODE_FORCED,
-                    Adafruit_BME280::SAMPLING_X1,  // temperature
-                    Adafruit_BME280::SAMPLING_X1,  // pressure
-                    Adafruit_BME280::SAMPLING_X1,  // humidity
-                    Adafruit_BME280::FILTER_OFF);
-
+    initBme();
     if (RESET_CLOCK || rtc.lostPower())
         rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     lcd.clear();
@@ -1636,15 +1607,15 @@ void setup() {
     mins = now.minute();
     hrs = now.hour();
 
-    bme.takeForcedMeasurement();
-    uint32_t Pressure = bme.readPressure();
+    updateBme();
+    uint32_t Pressure = getBmePressure();
     for (byte i = 0; i < 6; i++) {     // счётчик от 0 до 5
         pressure_array[i] = Pressure;  // забить весь массив текущим давлением
                                        // time_array[i] = i;                    //
                                        // забить массив времени числами 0 - 5
     }
 
-    dispAlt = (float)bme.readAltitude(SEALEVELPRESSURE_HPA);
+    dispAlt = getBmeAltitude();
 
     // заполняем графики текущим значением
     readSensors();
@@ -1668,7 +1639,6 @@ void setup() {
 
     if (DISPLAY_TYPE == 1) drawData();
     loadClock();
-    // readSensors();
     drawSensors();
 }
 
@@ -1676,7 +1646,6 @@ void loop() {
     if (testTimer(brightTimerD, brightTimer)) checkBrightness();  // яркость
     if (testTimer(sensorsTimerD, sensorsTimer))
         readSensors();  // читаем показания датчиков с периодом SENS_TIME
-    Serial.println(dispTemp);
 
     if (testTimer(clockTimerD, clockTimer))
         clockTick();    // два раза в секунду пересчитываем время и мигаем точками
