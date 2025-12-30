@@ -5,7 +5,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 
-#include "GyverButton.h"
+#include "button.h"
 #include "RTClib.h"
 #include "config.h"
 
@@ -93,7 +93,7 @@ unsigned long plotTimerD = 0;
 unsigned long predictTimerD = 0;
 unsigned long brightTimerD = 0;
 
-GButton button(BTN_PIN, LOW_PULL, NORM_OPEN);
+// Модуль кнопки реализован в src/button.cpp/h
 
 int8_t hrs, mins, secs;
 byte mode = 0;
@@ -971,9 +971,9 @@ void redrawPlot() {
 }
 
 void modesTick() {
-    button.tick();
+    updateButton();
     boolean changeFlag = false;
-    if (button.isSingle()) {  // одинарное нажатие на кнопку
+    if (isSingleButton()) {  // одинарное нажатие на кнопку
 
         if (mode >= 240) {
             podMode++;
@@ -1018,8 +1018,7 @@ void modesTick() {
             changeFlag = true;
         }
     }
-    if (button
-            .isDouble()) {            // двойное нажатие (с)НР ----------------------------
+    if (isDoubleButton()) {            // двойное нажатие (с)НР ----------------------------
         if (mode > 0 && mode < 11) {  // Меняет пределы графика на
                                       // установленные/фактические максимумы (с)НР
             MAX_ONDATA = (int)MAX_ONDATA ^ (1 << (mode - 1));
@@ -1033,7 +1032,7 @@ void modesTick() {
         changeFlag = true;
     }
 
-    if ((button.isTriple()) &&
+    if ((isTripleButton()) &&
         (mode ==
          0)) {  // тройное нажатие в режиме главного экрана - переход в меню (с)НР
         mode = 255;
@@ -1041,7 +1040,7 @@ void modesTick() {
         changeFlag = true;
     }
 
-    if (button.isHolded()) {  // удержание кнопки (с)НР
+    if (isHoldedButton()) {  // удержание кнопки (с)НР
         //    if ((mode >=252) && (mode <= 254)) {
         //      mode = 255;
         //      podMode = 1;
