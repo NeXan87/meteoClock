@@ -7,23 +7,9 @@
 #include "button.h"
 #include "co2.h"
 #include "config.h"
+#include "led.h"
 #include "rtc.h"
 
-#if (LED_MODE == 0)
-byte LED_ON = (LED_BRIGHT_MAX);
-byte LED_OFF = (0);
-#else
-byte LED_ON = (255 - LED_BRIGHT_MAX);
-byte LED_OFF = (255);
-#endif
-
-byte LEDType =
-    0;  //  при отсутствии сохранения в EEPROM: привязка индикатора к датчикам:
-        //  0 - СО2, 1 - Влажность, 2 - Температура, 3 - Осадки
-byte LED_BRIGHT =
-    10;  // при отсутствии сохранения в EEPROM: яркость светодиода СО2 (0 - 10)
-         // (коэффициент настраиваемой яркости индикатора по умолчанию, если нет
-         // сохранения и не автоматическая регулировка (с)НР)
 byte LCD_BRIGHT =
     10;  // при отсутствии сохранения в EEPROM: яркость экрана (0 - 10)
          // (коэффициент настраиваемой яркости экрана по умолчанию, если нет
@@ -347,16 +333,6 @@ void loadPlot() {
     lcd.createChar(5, row5);
     lcd.createChar(6, row6);
     lcd.createChar(7, row7);
-}
-
-void setLEDcolor(
-    byte color) {  // цвет индикатора задается двумя битами на каждый цвет (с)НР
-    analogWrite(LED_R,
-                LED_ON + LED_ON * ((LED_MODE << 1) - 1) * (3 - (color & 3)) / 3);
-    analogWrite(LED_G, LED_ON + LED_ON * ((LED_MODE << 1) - 1) *
-                                    (3 - ((color & 12) >> 2)) / 3);
-    analogWrite(LED_B, LED_ON + LED_ON * ((LED_MODE << 1) - 1) *
-                                    (3 - ((color & 48) >> 4)) / 3);
 }
 
 void digSeg(byte x, byte y, byte z1, byte z2, byte z3, byte z4, byte z5,
@@ -785,20 +761,8 @@ void checkBrightness() {
         analogWrite(BACKLIGHT, LCD_BRIGHT * LCD_BRIGHT * 2.5);
     }
 
-    if (LED_BRIGHT == 11) {
-        if (isDark) {
-#if (LED_MODE == 0)
-            LED_ON = (LED_BRIGHT_MIN);
-#else
-            LED_ON = (255 - LED_BRIGHT_MIN);
-#endif
-        } else {
-#if (LED_MODE == 0)
-            LED_ON = (LED_BRIGHT_MAX);
-#else
-            LED_ON = (255 - LED_BRIGHT_MAX);
-#endif
-        }
+    if (getLedBrightness() == 11) {
+        notifyAmbientLight(isDark);
     }
 }
 
@@ -815,39 +779,6 @@ void checkBrightness() {
   индикатора, 6-13 вкл/выкл графики: СО2 (час, день), Влажность (час, день),
   Температура (час, день), Осадки (час, день))
 */
-
-void setLED() {
-    if (LED_BRIGHT < 11) {  // если ручные установки яркости
-        LED_ON = 255 / 100 * LED_BRIGHT * LED_BRIGHT;
-    } else {
-        checkBrightness();
-    }
-    if (LED_MODE != 0) LED_ON = 255 - LED_ON;
-
-    // ниже задается цвет индикатора в зависимости от назначенного сенсора:
-    // красный, желтый, зеленый, синий (с)НР
-
-    if ((dispCO2 >= maxCO2) && LEDType == 0 ||
-        (dispHum <= minHum) && LEDType == 1 ||
-        (dispTemp >= maxTemp) && LEDType == 2 ||
-        (dispRain <= minRain) && LEDType == 3 ||
-        (dispPres <= minPress) && LEDType == 4)
-        setLEDcolor(3);  // красный
-    else if ((dispCO2 >= normCO2) && LEDType == 0 ||
-             (dispHum <= normHum) && LEDType == 1 ||
-             (dispTemp >= normTemp) && LEDType == 2 ||
-             (dispRain <= normRain) && LEDType == 3 ||
-             (dispPres <= normPress) && LEDType == 4)
-        setLEDcolor(48);  // синий // желтый 3 + 8
-    else if (LEDType == 0 || (dispHum <= maxHum) && LEDType == 1 ||
-             (dispTemp >= minTemp) && LEDType == 2 ||
-             (dispRain <= maxRain) && LEDType == 3 || LEDType == 4)
-        setLEDcolor(12);  // зеленый
-    else
-        setLEDcolor(
-            48);  // синий (если влажность превышает заданный максимум, температура
-                  // ниже минимума, вероятность осадков выше maxRain)
-}
 
 void redrawPlot() {
     lcd.clear();
@@ -950,7 +881,7 @@ void modesTick() {
                 case 252:  // Перебираем все варианты режимов LED индикатора (с)НР
                     //         podMode++;
                     if (podMode > 4) podMode = 0;
-                    LEDType = podMode;
+                    setLedType(podMode);
                     changeFlag = true;
                     break;
 
@@ -965,7 +896,7 @@ void modesTick() {
                 case 254:  // Перебираем все варианты яркости LED индикатора (с)НР
                     //         podMode++;
                     if (podMode > 11) podMode = 0;
-                    LED_BRIGHT = podMode;
+                    setLedBrightness(podMode);
                     changeFlag = true;
                     break;
 
@@ -1049,18 +980,18 @@ void modesTick() {
                         EEPROM.write(5, (VIS_ONDATA >> 8));
                     if (EEPROM.read(6) != mode0scr) EEPROM.write(6, mode0scr);
                     if (EEPROM.read(7) != bigDig) EEPROM.write(7, bigDig);
-                    if (EEPROM.read(8) != LED_BRIGHT) EEPROM.write(8, LED_BRIGHT);
+                    if (EEPROM.read(8) != getLedBrightness()) EEPROM.write(8, getLedBrightness());
                     if (EEPROM.read(9) != LCD_BRIGHT) EEPROM.write(9, LCD_BRIGHT);
-                    if (EEPROM.read(10) != LEDType) EEPROM.write(10, LEDType);
+                    if (EEPROM.read(10) != getLedType()) EEPROM.write(10, getLedType());
                     if (EEPROM.read(0) != 122) EEPROM.write(0, 122);
                 }
                 if (podMode < 6) podMode = 1;
                 if (mode == 252)
-                    podMode = LEDType;  // если выбран режим LED - устанавливаем текущее
-                                        // значение (с)НР
+                    podMode = getLedType();  // если выбран режим LED - устанавливаем текущее
+                                             // значение (с)НР
                 if (mode == 254)
-                    podMode = LED_BRIGHT;  // если выбрана яркость LED - устанавливаем
-                                           // текущее показание (с)НР
+                    podMode = getLedBrightness();  // если выбрана яркость LED - устанавливаем
+                                                   // текущее показание (с)НР
                 if (mode == 253)
                     podMode = LCD_BRIGHT;  // если выбрана яркость LCD - устанавливаем
                                            // текущее показание (с)НР
@@ -1194,7 +1125,7 @@ void modesTick() {
             }
         }
         if (mode == 252) {  // --------------------- показать  "Реж.индикатора"
-            LEDType = podMode;
+            setLedType(podMode);
             lcd.createChar(6, LL);  // Л
             lcd.createChar(3, DD);  // Д
             lcd.createChar(5, II);  // И
@@ -1259,14 +1190,14 @@ void modesTick() {
             lcd.print("indic.brt.:");
 #endif
             // lcd.setCursor(15, 0);
-            if (LED_BRIGHT == 11) {
+            if (getLedBrightness() == 11) {
 #if (WEEK_LANG == 1)
                 lcd.print("ABTO ");
 #else
                 lcd.print("Auto ");
 #endif
             } else
-                lcd.print(String(LED_BRIGHT * 10) + "%");
+                lcd.print(String(getLedBrightness() * 10) + "%");
         }
 
         if (mode == 0) {
@@ -1470,28 +1401,22 @@ void clockTick() {
         }
     }
 
-    if ((dispCO2 >= blinkLEDCO2 && LEDType == 0 ||
-         dispHum <= blinkLEDHum && LEDType == 1 ||
-         dispTemp >= blinkLEDTemp && LEDType == 2) &&
+    if ((dispCO2 >= blinkLEDCO2 && getLedType() == 0 ||
+         dispHum <= blinkLEDHum && getLedType() == 1 ||
+         dispTemp >= blinkLEDTemp && getLedType() == 2) &&
         !dotFlag)
-        setLEDcolor(0);  // мигание индикатора в зависимости от значения и
+        setLedColor(0);  // мигание индикатора в зависимости от значения и
                          // привязанного сенсора (с)НР
     else
-        setLED();
+        updateLed();
 }
 
 void setup() {
     Serial.begin(9600);
 
     pinMode(BACKLIGHT, OUTPUT);
-    pinMode(LED_COM, OUTPUT);
-    pinMode(LED_R, OUTPUT);
-    pinMode(LED_G, OUTPUT);
-    pinMode(LED_B, OUTPUT);
-    setLEDcolor(0);
-
-    digitalWrite(LED_COM, LED_MODE);
     analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
+    initLed();
 
     if (EEPROM.read(0) ==
         122) {  // если было сохранение настроек, то восстанавливаем их (с)НР
@@ -1501,9 +1426,9 @@ void setup() {
         VIS_ONDATA += (long)(EEPROM.read(5) << 8);
         mode0scr = EEPROM.read(6);
         bigDig = EEPROM.read(7);
-        LED_BRIGHT = EEPROM.read(8);
+        setLedBrightness(EEPROM.read(8));
         LCD_BRIGHT = EEPROM.read(9);
-        LEDType = EEPROM.read(10);
+        setLedType(EEPROM.read(10));
     }
 
     lcd.init();
@@ -1513,7 +1438,7 @@ void setup() {
 #if (DEBUG == 1 && DISPLAY_TYPE == 1)
     boolean status = true;
 
-    setLEDcolor(3);
+    setLedColor(3);
 
 #if (CO2_SENSOR == 1)
     lcd.setCursor(0, 0);
@@ -1532,7 +1457,7 @@ void setup() {
     }
 #endif
 
-    setLEDcolor(3 + 12);
+    setLedColor(3 + 12);
     lcd.setCursor(0, 1);
     lcd.print(F("RTC... "));
     Serial.print(F("RTC... "));
@@ -1546,7 +1471,7 @@ void setup() {
         status = false;
     }
 
-    setLEDcolor(12);
+    setLedColor(12);
     lcd.setCursor(0, 2);
     lcd.print(F("BME280... "));
     Serial.print(F("BME280... "));
@@ -1560,7 +1485,7 @@ void setup() {
         status = false;
     }
 
-    setLEDcolor(0);
+    setLedColor(0);
     lcd.setCursor(0, 3);
     if (status) {
         lcd.print(F("All good"));
