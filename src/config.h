@@ -32,26 +32,26 @@
 #define DISPLAY_ADDR 0x27  // адрес I2C адаптера экрана
 
 // Границы для индикации
-#define normCO2 800       // нормальный CO2 (ppm)
-#define maxCO2 1200       // высокий CO2
-#define blinkLEDCO2 1500  // при превышении мигает
+#define NORM_CO2 800        // нормальный CO2 (ppm)
+#define MAX_CO2 1200        // высокий CO2
+#define BLINK_LED_CO2 1500  // при превышении мигает
 
-#define minTemp 21       // температура ниже этого - синий
-#define normTemp 26      // температура выше этого - желтый
-#define maxTemp 28       // температура выше этого - красный
-#define blinkLEDTemp 35  // температура для мигания
+#define MIN_TEMP 21        // температура ниже этого - синий
+#define NORM_TEMP 26       // температура выше этого - желтый
+#define MAX_TEMP 28        // температура выше этого - красный
+#define BLINK_LED_TEMP 35  // температура для мигания
 
-#define maxHum 90       // влажность выше этого - синий
-#define normHum 30      // влажность ниже этого - желтый
-#define minHum 20       // влажность ниже этого - красный
-#define blinkLEDHum 15  // влажность для мигания
+#define MAX_HUM 90        // влажность выше этого - синий
+#define NORM_HUM 30       // влажность ниже этого - желтый
+#define MIN_HUM 20        // влажность ниже этого - красный
+#define BLINK_LED_HUM 15  // влажность для мигания
 
-#define normPress 733  // давление ниже - желтый
-#define minPress 728   // давление ниже - красный (можно синее)
+#define NORM_PRESS 733  // давление ниже - желтый
+#define MIN_PRESS 728   // давление ниже - красный (можно синее)
 
-#define minRain -50   // прогноз дождя ниже - красный
-#define normRain -20  // прогноз дождя ниже - желтый
-#define maxRain 50    // прогноз дождя выше - синий
+#define MIN_RAIN -50   // прогноз дождя ниже - красный
+#define NORM_RAIN -20  // прогноз дождя ниже - желтый
+#define MAX_RAIN 50    // прогноз дождя выше - синий
 
 // Маски по умолчанию для графиков
 #define DEFAULT_MAX_ONDATA 4095  // если EEPROM пуст, все графики масштабируются автоматически

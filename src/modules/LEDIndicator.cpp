@@ -73,15 +73,15 @@ void update() {
     // простая логика: зеленый нормальный, желтый средний, красный высокий
     uint8_t r = 0, g = 0, b = 0;
     if (mode == 0) {
-        if (val < normCO2) {
+        if (val < NORM_CO2) {
             g = ledOn;
-        } else if (val < maxCO2) {
+        } else if (val < MAX_CO2) {
             r = ledOn;
             g = ledOn / 2;
         } else {
             r = ledOn;
         }
-        if (val >= blinkLEDCO2 && (millis() - lastBlink > 500)) {
+        if (val >= BLINK_LED_CO2 && (millis() - lastBlink > 500)) {
             blinkState = !blinkState;
             lastBlink = millis();
         }

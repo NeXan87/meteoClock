@@ -1,4 +1,6 @@
 #pragma once
+#include <Arduino.h>  // for uint8_t
+
 #include "config.h"
 
 namespace LED {
