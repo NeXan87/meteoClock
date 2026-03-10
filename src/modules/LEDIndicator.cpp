@@ -10,7 +10,7 @@ namespace LED {
 static uint8_t brightness = LED_BRIGHT_MIN;  // 0..11 special
 static uint8_t mode = 0;                     // привязка
 static uint8_t ledOn = 0;
-static bool blinkState = false;
+static bool isBlinking = false;
 static unsigned long lastBlink = 0;
 
 void init() {
@@ -82,12 +82,12 @@ void update() {
             r = ledOn;
         }
         if (val >= BLINK_LED_CO2 && (millis() - lastBlink > 500)) {
-            blinkState = !blinkState;
+            isBlinking = !isBlinking;
             lastBlink = millis();
         }
     }
     // остальные режимы можно реализовать аналогично
-    if (blinkState) {
+    if (isBlinking) {
         applyColor(0, 0, 0);
     } else {
         applyColor(r, g, b);

@@ -13,7 +13,7 @@ namespace Clock {
 static RTC_DS3231 rtc;
 static DateTime now;
 static int hrs = 0, mins = 0, secs = 0;
-static bool dotFlag = false;
+static bool isDotOnFlag = false;
 
 void init() {
     rtc.begin();
@@ -28,8 +28,8 @@ void init() {
 }
 
 void tick() {
-    dotFlag = !dotFlag;
-    if (dotFlag) {
+    isDotOnFlag = !isDotOnFlag;
+    if (isDotOnFlag) {
         secs++;
         if (secs > 59) {
             secs = 0;
@@ -53,6 +53,6 @@ int getHours() { return hrs; }
 int getMinutes() { return mins; }
 int getSeconds() { return secs; }
 
-bool isDotOn() { return dotFlag; }
+bool isDotOn() { return isDotOnFlag; }
 
 }  // namespace Clock

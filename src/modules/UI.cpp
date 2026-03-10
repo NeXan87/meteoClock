@@ -14,7 +14,7 @@ namespace UI {
 static uint8_t mode = 0;
 static uint8_t podMode = 1;
 static uint8_t mode0scr = 0;
-static bool bigDig = false;
+static bool isBigDigitsEnabled = false;
 
 // маски отображения и масштабирования
 static int MAX_ONDATA = DEFAULT_MAX_ONDATA;
@@ -26,7 +26,7 @@ int getMaxOnData() { return MAX_ONDATA; }
 int getVisOnData() { return VIS_ONDATA; }
 
 uint8_t getMode0Scr() { return mode0scr; }
-bool isBigDigits() { return bigDig; }
+bool isBigDigits() { return isBigDigitsEnabled; }
 
 void init() {
     // прочитать сохранённые настройки из EEPROM
@@ -34,14 +34,14 @@ void init() {
         MAX_ONDATA = EEPROM.read(2) | (EEPROM.read(3) << 8);
         VIS_ONDATA = EEPROM.read(4) | (EEPROM.read(5) << 8);
         mode0scr = EEPROM.read(6);
-        bigDig = EEPROM.read(7);
+        isBigDigitsEnabled = EEPROM.read(7);
         // яркость и режим светодиода при желании можно считать здесь
     }
 }
 
 void tick() {
     Button::tick();
-    bool changeFlag = false;
+    bool isChanged = false;
     if (Button::isSingle()) {
         if (mode >= 240) {
             podMode++;
@@ -49,21 +49,21 @@ void tick() {
                 case 252:
                     if (podMode > 4) podMode = 0;
                     LED::setMode(podMode);
-                    changeFlag = true;
+                    isChanged = true;
                     break;
                 case 253:
                     if (podMode > 11) podMode = 0;
                     LED::setBrightness(podMode);
-                    changeFlag = true;
+                    isChanged = true;
                     break;
                 case 254:
                     if (podMode > 11) podMode = 0;
                     LED::setBrightness(podMode);
-                    changeFlag = true;
+                    isChanged = true;
                     break;
                 case 255:
                     if (podMode > 15) podMode = 1;
-                    changeFlag = true;
+                    isChanged = true;
                     break;
             }
         } else {
@@ -74,7 +74,7 @@ void tick() {
                 if (mode == 1) mode = 3;
 #endif
             } while (((VIS_ONDATA & (1 << (mode - 1))) == 0) && (mode > 0));
-            changeFlag = true;
+            isChanged = true;
         }
     }
     if (Button::isDouble()) {
@@ -89,17 +89,17 @@ void tick() {
         } else if (mode > 240) {
             podMode = 1;
         }
-        changeFlag = true;
+        isChanged = true;
     }
     if (Button::isTriple() && mode == 0) {
         mode = 255;
         podMode = 3;
-        changeFlag = true;
+        isChanged = true;
     }
     if (Button::isHolded()) {
         switch (mode) {
             case 0:
-                bigDig = !bigDig;
+                isBigDigitsEnabled = !isBigDigitsEnabled;
                 break;
             case 252:
                 mode = 255;
@@ -124,7 +124,7 @@ void tick() {
                     EEPROM.write(4, VIS_ONDATA & 255);
                     EEPROM.write(5, (VIS_ONDATA >> 8) & 255);
                     EEPROM.write(6, mode0scr);
-                    EEPROM.write(7, bigDig);
+                    EEPROM.write(7, isBigDigitsEnabled);
                     // яркость и режим светодиода сохраняются в других ячейках
                     EEPROM.write(0, 122);
                 }
@@ -133,10 +133,10 @@ void tick() {
             default:
                 mode = 0;
         }
-        changeFlag = true;
+        isChanged = true;
     }
 
-    if (changeFlag) {
+    if (isChanged) {
         // когда режим изменился, перерисовываем экран через модуль Display
         if (mode == 0) {
             Display::clear();

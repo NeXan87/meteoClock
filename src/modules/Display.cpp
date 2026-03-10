@@ -107,14 +107,14 @@ void drawSensors() {
     int mins = Clock::getMinutes();
 
     uint8_t mode0scr = UI::getMode0Scr();
-    bool bigDig = UI::isBigDigits();
+    bool isBig = UI::isBigDigits();
 
 #if (DISPLAY_TYPE == 1)
     // дисплей 2004 ----------------------------------
 
     if (mode0scr != 2) {  // температура
         lcd.setCursor(0, 2);
-        if (bigDig) {
+        if (isBig) {
             if (mode0scr == 1) lcd.setCursor(15, 2);
             if (mode0scr != 1) lcd.setCursor(15, 0);
         }
@@ -126,7 +126,7 @@ void drawSensors() {
 
     if (mode0scr != 4) {  // влажность
         lcd.setCursor(5, 2);
-        if (bigDig) lcd.setCursor(15, 1);
+        if (isBig) lcd.setCursor(15, 1);
         lcd.print(" " + String(dispHum) + "% ");
     } else {
         drawHum(dispHum, 0, 0);
@@ -134,7 +134,7 @@ void drawSensors() {
 
 #if (CO2_SENSOR == 1)
     if (mode0scr != 1) {  // СО2
-        if (bigDig) {
+        if (isBig) {
             lcd.setCursor(15, 2);
             lcd.print(String(dispCO2) + "p");
         } else {
@@ -148,10 +148,10 @@ void drawSensors() {
 
     if (mode0scr != 3) {  // давление
         lcd.setCursor(0, 3);
-        if (bigDig && mode0scr == 0) lcd.setCursor(15, 3);
-        if (bigDig && (mode0scr == 1 || mode0scr == 2)) lcd.setCursor(15, 0);
-        if (bigDig && mode0scr == 4) lcd.setCursor(15, 1);
-        if (!(bigDig && mode0scr == 1)) lcd.print(String(dispPres) + "mm");
+        if (isBig && mode0scr == 0) lcd.setCursor(15, 3);
+        if (isBig && (mode0scr == 1 || mode0scr == 2)) lcd.setCursor(15, 0);
+        if (isBig && mode0scr == 4) lcd.setCursor(15, 1);
+        if (!(isBig && mode0scr == 1)) lcd.print(String(dispPres) + "mm");
     } else {
         drawPres(dispPres, 0, 0);
     }
@@ -162,7 +162,7 @@ void drawSensors() {
         drawAlt(dispAlt, 0, 0);
     }
 
-    if (!bigDig) {
+    if (!isBig) {
         lcd.setCursor(5, 3);
         lcd.print(" rain     ");
         lcd.setCursor(11, 3);
@@ -181,8 +181,8 @@ void drawSensors() {
         drawClock(hrs, mins, 0, 0);
         // мигающие точки между цифрами
         byte code = Clock::isDotOn() ? 165 : 32;
-        if (mode0scr == 0 && ((bigDig && DISPLAY_TYPE == 0) || DISPLAY_TYPE == 1)) {
-            if (bigDig && DISPLAY_TYPE == 1) lcd.setCursor(7, 2);
+        if (mode0scr == 0 && ((isBig && DISPLAY_TYPE == 0) || DISPLAY_TYPE == 1)) {
+            if (isBig && DISPLAY_TYPE == 1) lcd.setCursor(7, 2);
             else lcd.setCursor(7, 0);
             lcd.write(code);
             lcd.setCursor(7, 1);
@@ -197,7 +197,7 @@ void drawSensors() {
     }
 #else
     // дисплей 1602 ----------------------------------
-    if (!bigDig) {
+    if (!isBig) {
         lcd.setCursor(0, 0);
         lcd.print(String(dispTemp, 1));
         lcd.write(223);
@@ -330,8 +330,8 @@ static void digSeg(int x, int y, int z1, int z2, int z3, int z4, int z5, int z6)
 }
 
 static void drawDig(int dig, int x, int y) {
-    bool bigDig = UI::isBigDigits();
-    if (bigDig && (DISPLAY_TYPE == 1)) {
+    bool isBig = UI::isBigDigits();
+    if (isBig && (DISPLAY_TYPE == 1)) {
         switch (dig) {
             case 0:
                 digSeg(x, y, 255, 0, 255, 255, 32, 255);
@@ -558,8 +558,8 @@ static void drawAlt(float dispAlt, int x, int y) {
 }
 
 static void loadClock() {
-    bool bigDig = UI::isBigDigits();
-    if (bigDig && (DISPLAY_TYPE == 1)) {
+    bool isBig = UI::isBigDigits();
+    if (isBig && (DISPLAY_TYPE == 1)) {
         lcd.createChar(0, UT);
         lcd.createChar(1, row3);
         lcd.createChar(2, UB);
