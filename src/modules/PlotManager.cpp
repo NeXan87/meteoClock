@@ -26,13 +26,9 @@ static float a;
 static int delta;
 
 void init() {
-#if (DISPLAY_TYPE == 1)
+    // таймеры для LCD2004
     hourPlotTimer = ((long)4 * 60 * 1000);
     dayPlotTimer = ((long)1.6 * 60 * 60 * 1000);
-#else
-    hourPlotTimer = ((long)5 * 60 * 1000);
-    dayPlotTimer = ((long)2 * 60 * 60 * 1000);
-#endif
     predictTimer = ((long)10 * 60 * 1000);
     hourPlotTimerD = 0;
     dayPlotTimerD = 0;

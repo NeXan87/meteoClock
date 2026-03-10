@@ -27,8 +27,8 @@
 #define DEBUG 0      // вывод отладочных сообщений на экран
 
 // Датчики и дисплей
-#define CO2_SENSOR 1       // 1 - поддержка MH-Z19, 0 - без CO2
-#define DISPLAY_TYPE 1     // 1 - LCD2004, 0 - LCD1602
+#define CO2_SENSOR 1  // 1 - поддержка MH-Z19, 0 - без CO2
+// дисплей жёстко выбирается LCD2004
 #define DISPLAY_ADDR 0x27  // адрес I2C адаптера экрана
 
 // Границы для индикации

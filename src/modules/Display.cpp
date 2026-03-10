@@ -11,11 +11,7 @@
 
 namespace Display {
 
-#if (DISPLAY_TYPE == 1)
-static LiquidCrystal_I2C lcd(DISPLAY_ADDR, 20, 4);
-#else
-static LiquidCrystal_I2C lcd(DISPLAY_ADDR, 16, 2);
-#endif
+static LiquidCrystal_I2C lcd(DISPLAY_ADDR, 20, 4);  // только LCD2004
 
 // символы, ранее были глобальными в main .ino
 static uint8_t rowS[8] = {0b00000, 0b00000, 0b00000, 0b00000, 0b10001, 0b01010, 0b00100, 0b00000};
@@ -109,9 +105,7 @@ void drawSensors() {
     uint8_t mode0scr = UI::getMode0Scr();
     bool isBig = UI::isBigDigits();
 
-#if (DISPLAY_TYPE == 1)
-    // дисплей 2004 ----------------------------------
-
+    // вывод для LCD2004
     if (mode0scr != 2) {  // температура
         lcd.setCursor(0, 2);
         if (isBig) {
@@ -181,69 +175,24 @@ void drawSensors() {
         drawClock(hrs, mins, 0, 0);
         // мигающие точки между цифрами
         byte code = Clock::isDotOn() ? 165 : 32;
-        if (mode0scr == 0 && ((isBig && DISPLAY_TYPE == 0) || DISPLAY_TYPE == 1)) {
-            if (isBig && DISPLAY_TYPE == 1) lcd.setCursor(7, 2);
+        if (mode0scr == 0) {
+            if (isBig) lcd.setCursor(7, 2);
             else lcd.setCursor(7, 0);
             lcd.write(code);
             lcd.setCursor(7, 1);
             lcd.write(code);
         } else {
-#if (DISPLAY_TYPE == 1)
             if (code == 165) code = 58;
             lcd.setCursor(17, 3);
             lcd.write(code);
-#endif
         }
     }
-#else
-    // дисплей 1602 ----------------------------------
-    if (!isBig) {
-        lcd.setCursor(0, 0);
-        lcd.print(String(dispTemp, 1));
-        lcd.write(223);
-        lcd.setCursor(6, 0);
-        lcd.print(String(dispHum) + "% ");
-
-#if (CO2_SENSOR == 1)
-        lcd.print(String(dispCO2) + "ppm");
-        if (dispCO2 < 1000) lcd.print(" ");
-#endif
-
-        lcd.setCursor(0, 1);
-        lcd.print(String(dispPres) + " mm  rain ");
-        lcd.print(String(dispRain) + "% ");
-    } else {
-        switch (mode0scr) {
-            case 0:
-                drawClock(hrs, mins, 0, 0);
-                break;
-            case 1:
-#if (CO2_SENSOR == 1)
-                drawPPM(dispCO2, 0, 0);
-#endif
-                break;
-            case 2:
-                drawTemp(dispTemp, 2, 0);
-                break;
-            case 3:
-                drawPres(dispPres, 2, 0);
-                break;
-            case 4:
-                drawHum(dispHum, 0, 0);
-                break;
-            case 5:
-                drawHum(dispAlt, 0, 0);
-                break;
-        }
-    }
-#endif
 }
 
 void redrawPlot(uint8_t mode) {
     // подготовим символы для графика
     loadPlot();
     lcd.clear();
-#if (DISPLAY_TYPE == 1)
     switch (mode) {
         case 1:
             drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)Plot::co2Hour(), "c ", "hr", mode);
@@ -276,41 +225,6 @@ void redrawPlot(uint8_t mode) {
             drawPlot(0, 3, 15, 4, ALT_MIN, ALT_MAX, (int*)Plot::altDay(), "m ", "da", mode);
             break;
     }
-#else
-    // реализация для 1602 идентична, но с другими параметрами
-    switch (mode) {
-        case 1:
-            drawPlot(0, 1, 12, 2, CO2_MIN, CO2_MAX, (int*)Plot::co2Hour(), "c", "h", mode);
-            break;
-        case 2:
-            drawPlot(0, 1, 12, 2, CO2_MIN, CO2_MAX, (int*)Plot::co2Day(), "c", "d", mode);
-            break;
-        case 3:
-            drawPlot(0, 1, 12, 2, HUM_MIN, HUM_MAX, (int*)Plot::humHour(), "h", "h", mode);
-            break;
-        case 4:
-            drawPlot(0, 1, 12, 2, HUM_MIN, HUM_MAX, (int*)Plot::humDay(), "h", "d", mode);
-            break;
-        case 5:
-            drawPlot(0, 1, 12, 2, TEMP_MIN, TEMP_MAX, (int*)Plot::tempHour(), "t", "h", mode);
-            break;
-        case 6:
-            drawPlot(0, 1, 12, 2, TEMP_MIN, TEMP_MAX, (int*)Plot::tempDay(), "t", "d", mode);
-            break;
-        case 7:
-            drawPlot(0, 1, 12, 2, PRESS_MIN, PRESS_MAX, (int*)Plot::pressHour(), "p", "h", mode);
-            break;
-        case 8:
-            drawPlot(0, 1, 12, 2, PRESS_MIN, PRESS_MAX, (int*)Plot::pressDay(), "p", "d", mode);
-            break;
-        case 9:
-            drawPlot(0, 1, 12, 2, ALT_MIN, ALT_MAX, (int*)Plot::altHour(), "m", "h", mode);
-            break;
-        case 10:
-            drawPlot(0, 1, 12, 2, ALT_MIN, ALT_MAX, (int*)Plot::altDay(), "m", "d", mode);
-            break;
-    }
-#endif
 }
 
 // вспомогательные функции, перенесённые из оригинального скетча
@@ -331,7 +245,7 @@ static void digSeg(int x, int y, int z1, int z2, int z3, int z4, int z5, int z6)
 
 static void drawDig(int dig, int x, int y) {
     bool isBig = UI::isBigDigits();
-    if (isBig && (DISPLAY_TYPE == 1)) {
+    if (isBig) {
         switch (dig) {
             case 0:
                 digSeg(x, y, 255, 0, 255, 255, 32, 255);
@@ -399,21 +313,16 @@ static void drawPlot(int pos, int row, int width, int height, int min_val, int m
     if ((UI::getMaxOnData() & (1 << (stretch - 1))) > 0) {
         max_val = max_value;
         min_val = min_value;
-#if (DISPLAY_TYPE == 1)
         lcd.write(0b01011110);
         lcd.setCursor(15, 3);
         lcd.write(0);
-#endif
     } else {
-#if (DISPLAY_TYPE == 1)
         lcd.write(0);
         lcd.setCursor(15, 3);
         lcd.write(0b01011110);
-#endif
     }
 
     if (min_val >= max_val) max_val = min_val + 1;
-#if (DISPLAY_TYPE == 1)
     lcd.setCursor(15, 1);
     lcd.write(0b01111100);
     lcd.setCursor(15, 2);
@@ -428,16 +337,6 @@ static void drawPlot(int pos, int row, int width, int height, int min_val, int m
     lcd.print(plot_array[14]);
     lcd.setCursor(16, 3);
     lcd.print(min_value);
-#else
-    lcd.setCursor(12, 0);
-    lcd.print(label1);
-    lcd.setCursor(13, 0);
-    lcd.print(max_value);
-    lcd.setCursor(12, 1);
-    lcd.print(label2);
-    lcd.setCursor(13, 1);
-    lcd.print(min_value);
-#endif
 
     for (byte i = 0; i < width; i++) {
         int fill_val = plot_array[i];
@@ -484,7 +383,7 @@ static void drawTemp(float dispTemp, int x, int y) {
     drawDig(int(dispTemp) % 10, x + 4, y);
     drawDig(int(dispTemp * 10.0) % 10, x + 9, y);
 
-    if (UI::isBigDigits() && (DISPLAY_TYPE == 1)) {
+    if (UI::isBigDigits()) {
         lcd.setCursor(x + 7, y + 3);
         lcd.write(1);  // десятичная точка
     } else {
@@ -501,7 +400,7 @@ static void drawHum(int dispHum, int x, int y) {
     if ((dispHum % 100) / 10 == 0) drawDig(0, x + 4, y);
     else drawDig(dispHum / 10, x + 4, y);
     drawDig(int(dispHum) % 10, x + 8, y);
-    if (UI::isBigDigits() && (DISPLAY_TYPE == 1)) {
+    if (UI::isBigDigits()) {
         lcd.setCursor(x + 12, y + 1);
         lcd.print("\245\4");
         lcd.setCursor(x + 12, y + 2);
@@ -519,18 +418,14 @@ static void drawPPM(int dispCO2, int x, int y) {
     drawDig((dispCO2 % 100) / 10, x + 8, y);
     drawDig(dispCO2 % 10, x + 12, y);
     lcd.setCursor(15, 0);
-#if (DISPLAY_TYPE == 1)
     lcd.print("ppm");
-#else
-    lcd.print("p");
-#endif
 }
 
 static void drawPres(int dispPres, int x, int y) {
     drawDig((dispPres % 1000) / 100, x, y);
     drawDig((dispPres % 100) / 10, x + 4, y);
     drawDig(dispPres % 10, x + 8, y);
-    lcd.setCursor(x + 11, 1 + (UI::isBigDigits() && (DISPLAY_TYPE == 1)) * 2);
+    lcd.setCursor(x + 11, 1 + (UI::isBigDigits()) * 2);
     lcd.print("mm");
 }
 
@@ -543,23 +438,23 @@ static void drawAlt(float dispAlt, int x, int y) {
     drawDig((int(dispAlt) % 100) / 10, x + 4, y);
     drawDig(int(dispAlt) % 10, x + 8, y);
     if (dispAlt < 1000) {
-        lcd.setCursor(x + 12, y + 1 + (UI::isBigDigits() && (DISPLAY_TYPE == 1)) * 2);
+        lcd.setCursor(x + 12, y + 1 + (UI::isBigDigits()) * 2);
         lcd.print((int(dispAlt * 10.0)) % 10);
-        if (UI::isBigDigits() && (DISPLAY_TYPE == 1)) lcd.setCursor(x + 11, y + 3);
+        if (UI::isBigDigits()) lcd.setCursor(x + 11, y + 3);
         else lcd.setCursor(x + 11, y + 1);
         lcd.print(".");
         x -= 1;
     } else {
         x -= 4;
     }
-    if (UI::isBigDigits() && (DISPLAY_TYPE == 1)) lcd.setCursor(x + 14, 3);
+    if (UI::isBigDigits()) lcd.setCursor(x + 14, 3);
     else lcd.setCursor(x + 14, 1);
     lcd.print("m");
 }
 
 static void loadClock() {
     bool isBig = UI::isBigDigits();
-    if (isBig && (DISPLAY_TYPE == 1)) {
+    if (isBig) {
         lcd.createChar(0, UT);
         lcd.createChar(1, row3);
         lcd.createChar(2, UB);
