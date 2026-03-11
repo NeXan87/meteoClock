@@ -76,7 +76,7 @@ void tick() {
 #if (CO2_SENSOR == 0)
                 if (mode == Mode::Sensor1) mode = Mode::Sensor3;
 #endif
-            } while (((VIS_ONDATA & (1 << (static_cast<uint8_t>(mode) - 1))) == 0) && 
+            } while (((VIS_ONDATA & (1 << (static_cast<uint8_t>(mode) - 1))) == 0) &&
                      (mode > Mode::Clock));
             isChanged = true;
         }
@@ -121,13 +121,13 @@ void tick() {
                 if (podMode == 2 || podMode == 1) mode = Mode::Clock;
                 if (podMode >= 3 && podMode <= 5) mode = static_cast<Mode>(255 - podMode + 2);
                 if (podMode >= 6 && podMode <= 17) VIS_ONDATA ^= (1 << (podMode - 6));
-                                        if (podMode == 1) {
+                if (podMode == 1) {
                     // сохранить настройки массива и экрана
                     EEPROM.write(2, MAX_ONDATA & 255);
                     EEPROM.write(3, (MAX_ONDATA >> 8) & 255);
                     EEPROM.write(4, VIS_ONDATA & 255);
                     EEPROM.write(5, (VIS_ONDATA >> 8) & 255);
-                                                EEPROM.write(6, static_cast<uint8_t>(mainDisplayMode));
+                    EEPROM.write(6, static_cast<uint8_t>(mainDisplayMode));
                     EEPROM.write(7, isBigDigitsEnabled);
                     // яркость и режим светодиода сохраняются в других ячейках
                     EEPROM.write(0, 122);
