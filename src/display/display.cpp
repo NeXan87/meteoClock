@@ -65,7 +65,8 @@ static uint8_t KD[8] = {0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b00000, 0b
 
 void init() {
     lcd.init();
-    lcd.backlight();
+    pinMode(BACKLIGHT, OUTPUT);
+    analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
     createCustomChars();
     if (DEBUG) {
         Serial.println("Display::init called");
