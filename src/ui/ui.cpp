@@ -4,10 +4,10 @@
 #include <EEPROM.h>
 
 #include "button/button.h"
+#include "config.h"
 #include "display/display.h"
 #include "led/led-indicator.h"
 #include "plot/plot.h"
-#include "config.h"
 
 namespace UI {
 

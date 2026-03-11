@@ -3,10 +3,10 @@
 #include <Arduino.h>
 #include <RTClib.h>
 
+#include "config.h"
 #include "display/display.h"  // для обновления экрана при необходимости
 #include "sensors/sensors.h"
 #include "ui/ui.h"
-#include "config.h"
 
 namespace Clock {
 

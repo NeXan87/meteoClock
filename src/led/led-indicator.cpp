@@ -2,8 +2,8 @@
 
 #include <Arduino.h>
 
-#include "sensors/sensors.h"
 #include "config.h"
+#include "sensors/sensors.h"
 
 namespace LED {
 

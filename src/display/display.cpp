@@ -4,10 +4,10 @@
 #include <Wire.h>
 
 #include "clock/clock.h"  // для времени
-#include "plot/plot.h"   // для доступа к массивам графиков
-#include "sensors/sensors.h"       // для получения данных
-#include "ui/ui.h"
 #include "config.h"
+#include "plot/plot.h"        // для доступа к массивам графиков
+#include "sensors/sensors.h"  // для получения данных
+#include "ui/ui.h"
 
 namespace Display {
 

@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "config.h"
 #include "button/button.h"
 #include "clock/clock.h"
+#include "config.h"
 #include "display/display.h"
 #include "led/led-indicator.h"
 #include "plot/plot.h"
