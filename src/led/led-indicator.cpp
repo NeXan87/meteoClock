@@ -52,12 +52,12 @@ static void computeBrightness() {
     if (brightness == LED_BRIGHT_AUTO) {  // авто
         int light = analogRead(PHOTO);
         if (light < BRIGHT_THRESHOLD) {
-            ledOn = LED_BRIGHT_MIN;
+            ledOn = static_cast<uint8_t>(LED_BRIGHT_MIN);
         } else {
-            ledOn = LED_BRIGHT_MAX;
+            ledOn = static_cast<uint8_t>(LED_BRIGHT_MAX);
         }
     } else {
-        ledOn = brightness * brightness * 2.5;
+        ledOn = static_cast<uint8_t>(brightness * brightness * 2.5);
     }
 }
 
@@ -71,10 +71,10 @@ void update() {
             val = Sensors::getCO2();
             break;
         case UI::LEDBindMode::Humidity:
-            val = Sensors::getHumidity();
+            val = static_cast<int>(Sensors::getHumidity());
             break;
         case UI::LEDBindMode::Temperature:
-            val = Sensors::getTemp();
+            val = static_cast<int>(Sensors::getTemp());
             break;
         case UI::LEDBindMode::Rain:
             val = Sensors::getRain();

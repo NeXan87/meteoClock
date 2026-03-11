@@ -21,8 +21,8 @@ static unsigned long hourPlotTimerD;
 static unsigned long dayPlotTimerD;
 static unsigned long predictTimerD;
 
-static uint32_t pressure_array[6];
-static uint32_t sumX, sumY, sumX2, sumXY;
+static long pressure_array[6];
+static long sumX, sumY, sumX2, sumXY;
 static float a;
 static int delta;
 
@@ -64,11 +64,11 @@ void tick() {
             altHourArr[i] = altHourArr[i + 1];
             co2HourArr[i] = co2HourArr[i + 1];
         }
-        tempHourArr[PLOT_SAMPLES - 1] = Sensors::getTemp();
-        humHourArr[PLOT_SAMPLES - 1] = Sensors::getHumidity();
-        pressHourArr[PLOT_SAMPLES - 1] = Sensors::getPres();
-        altHourArr[PLOT_SAMPLES - 1] = Sensors::getAlt();
-        co2HourArr[PLOT_SAMPLES - 1] = Sensors::getCO2();
+        tempHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getTemp());
+        humHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getHumidity());
+        pressHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getPres());
+        altHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getAlt());
+        co2HourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getCO2());
     }
     if (testTimer(dayPlotTimerD, dayPlotTimer)) {
         long averTemp = 0, averHum = 0, averPress = 0, averAlt = 0, averCO2 = 0;
@@ -91,17 +91,17 @@ void tick() {
             altDayArr[i] = altDayArr[i + 1];
             co2DayArr[i] = co2DayArr[i + 1];
         }
-        tempDayArr[PLOT_SAMPLES - 1] = averTemp;
-        humDayArr[PLOT_SAMPLES - 1] = averHum;
-        pressDayArr[PLOT_SAMPLES - 1] = averPress;
-        altDayArr[PLOT_SAMPLES - 1] = averAlt;
-        co2DayArr[PLOT_SAMPLES - 1] = averCO2;
+        tempDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averTemp);
+        humDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averHum);
+        pressDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averPress);
+        altDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averAlt);
+        co2DayArr[PLOT_SAMPLES - 1] = static_cast<int>(averCO2);
     }
     if (testTimer(predictTimerD, predictTimer)) {
         long averPress = 0;
         for (byte i = 0; i < PREDICT_SAMPLE_COUNT; i++) {
             // в данном месте подразумевается, что датчик BME280 будет доступен
-            averPress += Sensors::getPres();
+            averPress += static_cast<long>(Sensors::getPres());
             delay(PREDICT_READ_DELAY_MS);
         }
         averPress /= 10;
@@ -113,7 +113,7 @@ void tick() {
         sumX = sumY = sumX2 = sumXY = 0;
         for (int i = 0; i < 6; i++) {
             sumX += i;
-            sumY += (long)pressure_array[i];
+            sumY += pressure_array[i];
             sumX2 += i * i;
             sumXY += (long)i * pressure_array[i];
         }

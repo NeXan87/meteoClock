@@ -34,9 +34,9 @@ void init() {
 void update() {
     bme.takeForcedMeasurement();
     temp = bme.readTemperature();
-    hum = bme.readHumidity();
-    alt = ((float)alt * 1 + bme.readAltitude(SEALEVELPRESSURE_HPA)) / 2;  // сглаживание
-    pres = (float)bme.readPressure() * 0.00750062;
+    hum = static_cast<uint8_t>(bme.readHumidity());
+    alt = ((float)alt * 1 + bme.readAltitude(SEALEVELPRESSURE_HPA)) / 2.0f;  // сглаживание
+    pres = static_cast<int>(bme.readPressure() * 0.00750062);
 #if (CO2_SENSOR == 1)
     co2 = mhz19.getPPM();
 #else

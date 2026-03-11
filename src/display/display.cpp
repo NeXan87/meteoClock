@@ -244,15 +244,15 @@ void redrawPlot(uint8_t mode) {
 // котируются static, потому что используются только внутри Display.cpp
 
 static void digSeg(int x, int y, int z1, int z2, int z3, int z4, int z5, int z6) {
-    lcd.setCursor((uint8_t)x, (uint8_t)y);
-    lcd.write(z1);
-    lcd.write(z2);
-    lcd.write(z3);
+    lcd.setCursor(static_cast<uint8_t>(x), static_cast<uint8_t>(y));
+    lcd.write(static_cast<uint8_t>(z1));
+    lcd.write(static_cast<uint8_t>(z2));
+    lcd.write(static_cast<uint8_t>(z3));
     if (x <= 11) lcd.print(" ");
-    lcd.setCursor((uint8_t)x, (uint8_t)(y + 1));
-    lcd.write(z4);
-    lcd.write(z5);
-    lcd.write(z6);
+    lcd.setCursor(static_cast<uint8_t>(x), static_cast<uint8_t>(y + 1));
+    lcd.write(static_cast<uint8_t>(z4));
+    lcd.write(static_cast<uint8_t>(z5));
+    lcd.write(static_cast<uint8_t>(z6));
     if (x <= 11) lcd.print(" ");
 }
 
@@ -307,7 +307,7 @@ static void drawDig(int dig, int x, int y) {
         }
     } else {
         // простые цифры: обычный вывод
-        lcd.setCursor(x, y);
+        lcd.setCursor(static_cast<uint8_t>(x), static_cast<uint8_t>(y));
         if (dig == 10) lcd.print(' ');
         else lcd.print(dig);
     }
@@ -351,29 +351,32 @@ static void drawPlot(int pos, int row, int width, int height, int min_val, int m
     lcd.setCursor(LCD_VALUE_COLUMN, 3);
     lcd.print(min_value);
 
-    for (byte i = 0; i < width; i++) {
+    for (byte i = 0; i < static_cast<byte>(width); i++) {
         int fill_val = plot_array[i];
         fill_val = constrain(fill_val, min_val, max_val);
         byte infill, fract;
         if ((plot_array[i]) > min_val)
-            infill = floor((float)(plot_array[i] - min_val) / (max_val - min_val) * height * 10);
-        else infill = 0;
-        fract = (float)(infill % 10) * 8 / 10;
-        infill = infill / 10;
+            infill = static_cast<byte>(floor((float)(plot_array[i] - min_val) / (max_val - min_val) * height * 10));
+        else
+            infill = 0;
+        fract = static_cast<byte>((float)(infill % 10) * 8 / 10);
+        infill = static_cast<byte>(infill / 10);
 
         for (byte n = 0; n < height; n++) {
             if (n < infill && infill > 0) {
-                lcd.setCursor(i, (row - n));
-                lcd.write(255);
+                lcd.setCursor(static_cast<uint8_t>(i), static_cast<uint8_t>(row - n));
+                lcd.write(static_cast<uint8_t>(255));
             }
             if (n >= infill) {
-                lcd.setCursor(i, (row - n));
+                lcd.setCursor(static_cast<uint8_t>(i), static_cast<uint8_t>(row - n));
                 if (n == 0 && fract == 0) fract++;
-                if (fract > 0) lcd.write(fract);
-                else lcd.write(16);
-                for (byte k = n + 1; k < height; k++) {
-                    lcd.setCursor(i, (row - k));
-                    lcd.write(16);
+                if (fract > 0)
+                    lcd.write(static_cast<uint8_t>(fract));
+                else
+                    lcd.write(static_cast<uint8_t>(16));
+                for (int k = n + 1; k < height; k++) {
+                    lcd.setCursor(static_cast<uint8_t>(i), static_cast<uint8_t>(row - k));
+                    lcd.write(static_cast<uint8_t>(16));
                 }
                 break;
             }
@@ -391,20 +394,21 @@ static void drawClock(int hours, int minutes, int x, int y) {
 }
 
 static void drawTemp(float dispTemp, int x, int y) {
-    if (dispTemp / 10 == 0) drawDig(10, x, y);
-    else drawDig(dispTemp / 10, x, y);
-    drawDig(int(dispTemp) % 10, x + 4, y);
-    drawDig(int(dispTemp * 10.0) % 10, x + 9, y);
+    int tens = static_cast<int>(dispTemp / 10.0f);
+    if (tens == 0) drawDig(10, x, y);
+    else drawDig(tens, x, y);
+    drawDig(static_cast<int>(dispTemp) % 10, x + 4, y);
+    drawDig(static_cast<int>(dispTemp * 10.0f) % 10, x + 9, y);
 
     if (UI::isBigDigits()) {
-        lcd.setCursor(x + 7, y + 3);
-        lcd.write(1);  // десятичная точка
+        lcd.setCursor(static_cast<uint8_t>(x + 7), static_cast<uint8_t>(y + 3));
+        lcd.write(static_cast<uint8_t>(1));  // десятичная точка
     } else {
-        lcd.setCursor(x + 7, y + 1);
-        lcd.write(0B10100001);
+        lcd.setCursor(static_cast<uint8_t>(x + 7), static_cast<uint8_t>(y + 1));
+        lcd.write(static_cast<uint8_t>(0B10100001));
     }
-    lcd.setCursor(x + 13, y);
-    lcd.write(223);
+    lcd.setCursor(static_cast<uint8_t>(x + 13), static_cast<uint8_t>(y));
+    lcd.write(static_cast<uint8_t>(223));
 }
 
 static void drawHum(int dispHum, int x, int y) {
@@ -412,14 +416,14 @@ static void drawHum(int dispHum, int x, int y) {
     else drawDig(dispHum / 100, x, y);
     if ((dispHum % 100) / 10 == 0) drawDig(0, x + 4, y);
     else drawDig(dispHum / 10, x + 4, y);
-    drawDig(int(dispHum) % 10, x + 8, y);
+    drawDig(static_cast<int>(dispHum) % 10, x + 8, y);
     if (UI::isBigDigits()) {
-        lcd.setCursor(x + 12, y + 1);
+        lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 1));
         lcd.print("\245\4");
-        lcd.setCursor(x + 12, y + 2);
+        lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 2));
         lcd.print("\5\245");
     } else {
-        lcd.setCursor(x + 12, y + 1);
+        lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 1));
         lcd.print("%");
     }
 }
@@ -430,7 +434,7 @@ static void drawPPM(int dispCO2, int x, int y) {
     drawDig((dispCO2 % 1000) / 100, x + 4, y);
     drawDig((dispCO2 % 100) / 10, x + 8, y);
     drawDig(dispCO2 % 10, x + 12, y);
-    lcd.setCursor(LCD_PLOT_COLUMN, 0);
+    lcd.setCursor(static_cast<uint8_t>(LCD_PLOT_COLUMN), 0);
     lcd.print("ppm");
 }
 
@@ -438,30 +442,30 @@ static void drawPres(int dispPres, int x, int y) {
     drawDig((dispPres % 1000) / 100, x, y);
     drawDig((dispPres % 100) / 10, x + 4, y);
     drawDig(dispPres % 10, x + 8, y);
-    lcd.setCursor(x + 11, 1 + (UI::isBigDigits()) * 2);
+    lcd.setCursor(static_cast<uint8_t>(x + 11), static_cast<uint8_t>(1 + (UI::isBigDigits()) * 2));
     lcd.print("mm");
 }
 
 static void drawAlt(float dispAlt, int x, int y) {
     if (dispAlt >= 1000) {
-        drawDig((int(dispAlt) % 10000) / 1000, x, y);
+        drawDig((static_cast<int>(dispAlt) % 10000) / 1000, x, y);
         x += 4;
     }
-    drawDig((int(dispAlt) % 1000) / 100, x, y);
-    drawDig((int(dispAlt) % 100) / 10, x + 4, y);
-    drawDig(int(dispAlt) % 10, x + 8, y);
+    drawDig((static_cast<int>(dispAlt) % 1000) / 100, x, y);
+    drawDig((static_cast<int>(dispAlt) % 100) / 10, x + 4, y);
+    drawDig(static_cast<int>(dispAlt) % 10, x + 8, y);
     if (dispAlt < 1000) {
-        lcd.setCursor(x + 12, y + 1 + (UI::isBigDigits()) * 2);
-        lcd.print((int(dispAlt * 10.0)) % 10);
-        if (UI::isBigDigits()) lcd.setCursor(x + 11, y + 3);
-        else lcd.setCursor(x + 11, y + 1);
+        lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 1 + (UI::isBigDigits()) * 2));
+        lcd.print(static_cast<int>(dispAlt * 10.0f) % 10);
+        if (UI::isBigDigits()) lcd.setCursor(static_cast<uint8_t>(x + 11), static_cast<uint8_t>(y + 3));
+        else lcd.setCursor(static_cast<uint8_t>(x + 11), static_cast<uint8_t>(y + 1));
         lcd.print(".");
         x -= 1;
     } else {
         x -= 4;
     }
-    if (UI::isBigDigits()) lcd.setCursor(x + 14, 3);
-    else lcd.setCursor(x + 14, 1);
+    if (UI::isBigDigits()) lcd.setCursor(static_cast<uint8_t>(x + 14), 3);
+    else lcd.setCursor(static_cast<uint8_t>(x + 14), 1);
     lcd.print("m");
 }
 

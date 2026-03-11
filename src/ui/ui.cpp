@@ -123,12 +123,12 @@ void tick() {
                 if (podMode >= 6 && podMode <= 17) VIS_ONDATA ^= (1 << (podMode - 6));
                 if (podMode == 1) {
                     // сохранить настройки массива и экрана
-                    EEPROM.write(EEPROM_MAX_ONDATA_ADDR, MAX_ONDATA & 255);
-                    EEPROM.write(EEPROM_MAX_ONDATA_ADDR + 1, (MAX_ONDATA >> 8) & 255);
-                    EEPROM.write(EEPROM_VIS_ONDATA_ADDR, VIS_ONDATA & 255);
-                    EEPROM.write(EEPROM_VIS_ONDATA_ADDR + 1, (VIS_ONDATA >> 8) & 255);
+                    EEPROM.write(EEPROM_MAX_ONDATA_ADDR, static_cast<uint8_t>(MAX_ONDATA & 255));
+                    EEPROM.write(EEPROM_MAX_ONDATA_ADDR + 1, static_cast<uint8_t>((MAX_ONDATA >> 8) & 255));
+                    EEPROM.write(EEPROM_VIS_ONDATA_ADDR, static_cast<uint8_t>(VIS_ONDATA & 255));
+                    EEPROM.write(EEPROM_VIS_ONDATA_ADDR + 1, static_cast<uint8_t>((VIS_ONDATA >> 8) & 255));
                     EEPROM.write(EEPROM_MAIN_DISPLAY_ADDR, static_cast<uint8_t>(mainDisplayMode));
-                    EEPROM.write(EEPROM_BIGDIG_ADDR, isBigDigitsEnabled);
+                    EEPROM.write(EEPROM_BIGDIG_ADDR, static_cast<uint8_t>(isBigDigitsEnabled));
                     // яркость и режим светодиода сохраняются в других ячейках
                     EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
                 }
