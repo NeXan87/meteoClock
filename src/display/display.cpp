@@ -9,12 +9,22 @@
 #include "sensors/sensors.h"  // для получения данных
 #include "ui/enums.h"
 #include "ui/ui.h"
+// character codes
+#ifndef CHAR_DOT_BIG
+#define CHAR_DOT_BIG 165
+#endif
+#ifndef CHAR_SPACE
+#define CHAR_SPACE 32
+#endif
+#ifndef CHAR_COLON_ALT
+#define CHAR_COLON_ALT 58
+#endif
 
 using UI::MainDisplayMode;
 
 namespace Display {
 
-static LiquidCrystal_I2C lcd(DISPLAY_ADDR, 20, 4);  // только LCD2004
+static LiquidCrystal_I2C lcd(DISPLAY_ADDR, LCD_COLS, LCD_ROWS);  // только LCD2004
 
 // символы, ранее были глобальными в main .ino
 static uint8_t rowS[8] = {0b00000, 0b00000, 0b00000, 0b00000, 0b10001, 0b01010, 0b00100, 0b00000};
@@ -112,8 +122,8 @@ void drawSensors() {
     if (mode0scr != MainDisplayMode::Temperature) {  // температура
         lcd.setCursor(0, 2);
         if (isBig) {
-            if (mode0scr == MainDisplayMode::CO2) lcd.setCursor(15, 2);
-            if (mode0scr != MainDisplayMode::CO2) lcd.setCursor(15, 0);
+            if (mode0scr == MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 2);
+            if (mode0scr != MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 0);
         }
         lcd.print(String(dispTemp, 1));
         lcd.write(223);
@@ -123,7 +133,7 @@ void drawSensors() {
 
     if (mode0scr != MainDisplayMode::Humidity) {  // влажность
         lcd.setCursor(5, 2);
-        if (isBig) lcd.setCursor(15, 1);
+        if (isBig) lcd.setCursor(LCD_PLOT_COLUMN, 1);
         lcd.print(" " + String(dispHum) + "% ");
     } else {
         drawHum(dispHum, 0, 0);
@@ -132,7 +142,7 @@ void drawSensors() {
 #if (CO2_SENSOR == 1)
     if (mode0scr != MainDisplayMode::CO2) {  // СО2
         if (isBig) {
-            lcd.setCursor(15, 2);
+            lcd.setCursor(LCD_PLOT_COLUMN, 2);
             lcd.print(String(dispCO2) + "p");
         } else {
             lcd.setCursor(11, 2);
@@ -145,9 +155,9 @@ void drawSensors() {
 
     if (mode0scr != MainDisplayMode::Pressure) {  // давление
         lcd.setCursor(0, 3);
-        if (isBig && mode0scr == MainDisplayMode::Time) lcd.setCursor(15, 3);
-        if (isBig && (mode0scr == MainDisplayMode::CO2 || mode0scr == MainDisplayMode::Temperature)) lcd.setCursor(15, 0);
-        if (isBig && mode0scr == MainDisplayMode::Humidity) lcd.setCursor(15, 1);
+        if (isBig && mode0scr == MainDisplayMode::Time) lcd.setCursor(LCD_PLOT_COLUMN, 3);
+        if (isBig && (mode0scr == MainDisplayMode::CO2 || mode0scr == MainDisplayMode::Temperature)) lcd.setCursor(LCD_PLOT_COLUMN, 0);
+        if (isBig && mode0scr == MainDisplayMode::Humidity) lcd.setCursor(LCD_PLOT_COLUMN, 1);
         if (!(isBig && mode0scr == MainDisplayMode::CO2)) lcd.print(String(dispPres) + "mm");
     } else {
         drawPres(dispPres, 0, 0);
@@ -168,7 +178,7 @@ void drawSensors() {
     }
 
     if (mode0scr != MainDisplayMode::Time) {
-        lcd.setCursor(15, 3);
+        lcd.setCursor(LCD_PLOT_COLUMN, 3);
         if (hrs / 10 == 0) lcd.print(" ");
         lcd.print(hrs);
         lcd.print(":");
@@ -177,7 +187,7 @@ void drawSensors() {
     } else {
         drawClock(hrs, mins, 0, 0);
         // мигающие точки между цифрами
-        byte code = Clock::isDotOn() ? 165 : 32;
+        byte code = Clock::isDotOn() ? CHAR_DOT_BIG : CHAR_SPACE;
         if (mode0scr == MainDisplayMode::Time) {
             if (isBig) lcd.setCursor(7, 2);
             else lcd.setCursor(7, 0);
@@ -185,8 +195,8 @@ void drawSensors() {
             lcd.setCursor(7, 1);
             lcd.write(code);
         } else {
-            if (code == 165) code = 58;
-            lcd.setCursor(17, 3);
+            if (code == CHAR_DOT_BIG) code = CHAR_COLON_ALT;
+            lcd.setCursor(LCD_PLOT_COLUMN + 2, 3);
             lcd.write(code);
         }
     }
@@ -198,34 +208,34 @@ void redrawPlot(uint8_t mode) {
     lcd.clear();
     switch (mode) {
         case 1:
-            drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)Plot::co2Hour(), "c ", "hr", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, CO2_MIN, CO2_MAX, (int*)Plot::co2Hour(), "c ", "hr", mode);
             break;
         case 2:
-            drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)Plot::co2Day(), "c ", "da", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, CO2_MIN, CO2_MAX, (int*)Plot::co2Day(), "c ", "da", mode);
             break;
         case 3:
-            drawPlot(0, 3, 15, 4, HUM_MIN, HUM_MAX, (int*)Plot::humHour(), "h%", "hr", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, HUM_MIN, HUM_MAX, (int*)Plot::humHour(), "h%", "hr", mode);
             break;
         case 4:
-            drawPlot(0, 3, 15, 4, HUM_MIN, HUM_MAX, (int*)Plot::humDay(), "h%", "da", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, HUM_MIN, HUM_MAX, (int*)Plot::humDay(), "h%", "da", mode);
             break;
         case 5:
-            drawPlot(0, 3, 15, 4, TEMP_MIN, TEMP_MAX, (int*)Plot::tempHour(), "t\337", "hr", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, TEMP_MIN, TEMP_MAX, (int*)Plot::tempHour(), "t\337", "hr", mode);
             break;
         case 6:
-            drawPlot(0, 3, 15, 4, TEMP_MIN, TEMP_MAX, (int*)Plot::tempDay(), "t\337", "da", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, TEMP_MIN, TEMP_MAX, (int*)Plot::tempDay(), "t\337", "da", mode);
             break;
         case 7:
-            drawPlot(0, 3, 15, 4, PRESS_MIN, PRESS_MAX, (int*)Plot::pressHour(), "p ", "hr", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, PRESS_MIN, PRESS_MAX, (int*)Plot::pressHour(), "p ", "hr", mode);
             break;
         case 8:
-            drawPlot(0, 3, 15, 4, PRESS_MIN, PRESS_MAX, (int*)Plot::pressDay(), "p ", "da", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, PRESS_MIN, PRESS_MAX, (int*)Plot::pressDay(), "p ", "da", mode);
             break;
         case 9:
-            drawPlot(0, 3, 15, 4, ALT_MIN, ALT_MAX, (int*)Plot::altHour(), "m ", "hr", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, ALT_MIN, ALT_MAX, (int*)Plot::altHour(), "m ", "hr", mode);
             break;
         case 10:
-            drawPlot(0, 3, 15, 4, ALT_MIN, ALT_MAX, (int*)Plot::altDay(), "m ", "da", mode);
+            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, ALT_MIN, ALT_MAX, (int*)Plot::altDay(), "m ", "da", mode);
             break;
     }
 }
@@ -306,39 +316,39 @@ static void drawDig(int dig, int x, int y) {
 static void drawPlot(int pos, int row, int width, int height, int min_val, int max_val, int* plot_array, const char* label1, const char* label2, int stretch) {
     int max_value = -32000;
     int min_value = 32000;
-    for (byte i = 0; i < 15; i++) {
+    for (byte i = 0; i < PLOT_SAMPLES; i++) {
         max_value = max(plot_array[i], max_value);
         min_value = min(plot_array[i], min_value);
     }
 
     // меняем пределы графиков на предельные/фактические значения, одновременно рисуем указатель пределов
-    lcd.setCursor(15, 0);
+    lcd.setCursor(LCD_PLOT_COLUMN, 0);
     if ((UI::getMaxOnData() & (1 << (stretch - 1))) > 0) {
         max_val = max_value;
         min_val = min_value;
         lcd.write(0b01011110);
-        lcd.setCursor(15, 3);
+        lcd.setCursor(LCD_PLOT_COLUMN, 3);
         lcd.write(0);
     } else {
         lcd.write(0);
-        lcd.setCursor(15, 3);
+        lcd.setCursor(LCD_PLOT_COLUMN, 3);
         lcd.write(0b01011110);
     }
 
     if (min_val >= max_val) max_val = min_val + 1;
-    lcd.setCursor(15, 1);
+    lcd.setCursor(LCD_PLOT_COLUMN, 1);
     lcd.write(0b01111100);
-    lcd.setCursor(15, 2);
+    lcd.setCursor(LCD_PLOT_COLUMN, 2);
     lcd.write(0b01111100);
 
-    lcd.setCursor(16, 0);
+    lcd.setCursor(LCD_VALUE_COLUMN, 0);
     lcd.print(max_value);
-    lcd.setCursor(16, 1);
+    lcd.setCursor(LCD_VALUE_COLUMN, 1);
     lcd.print(label1);
     lcd.print(label2);
-    lcd.setCursor(16, 2);
-    lcd.print(plot_array[14]);
-    lcd.setCursor(16, 3);
+    lcd.setCursor(LCD_VALUE_COLUMN, 2);
+    lcd.print(plot_array[PLOT_SAMPLES - 1]);
+    lcd.setCursor(LCD_VALUE_COLUMN, 3);
     lcd.print(min_value);
 
     for (byte i = 0; i < width; i++) {
@@ -420,7 +430,7 @@ static void drawPPM(int dispCO2, int x, int y) {
     drawDig((dispCO2 % 1000) / 100, x + 4, y);
     drawDig((dispCO2 % 100) / 10, x + 8, y);
     drawDig(dispCO2 % 10, x + 12, y);
-    lcd.setCursor(15, 0);
+    lcd.setCursor(LCD_PLOT_COLUMN, 0);
     lcd.print("ppm");
 }
 

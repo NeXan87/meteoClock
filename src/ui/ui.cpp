@@ -31,11 +31,11 @@ bool isBigDigits() { return isBigDigitsEnabled; }
 
 void init() {
     // прочитать сохранённые настройки из EEPROM
-    if (EEPROM.read(0) == 122) {
-        MAX_ONDATA = EEPROM.read(2) | (EEPROM.read(3) << 8);
-        VIS_ONDATA = EEPROM.read(4) | (EEPROM.read(5) << 8);
-        mainDisplayMode = static_cast<MainDisplayMode>(EEPROM.read(6));
-        isBigDigitsEnabled = EEPROM.read(7);
+    if (EEPROM.read(EEPROM_MAGIC_ADDR) == EEPROM_MAGIC_VALUE) {
+        MAX_ONDATA = EEPROM.read(EEPROM_MAX_ONDATA_ADDR) | (EEPROM.read(EEPROM_MAX_ONDATA_ADDR + 1) << 8);
+        VIS_ONDATA = EEPROM.read(EEPROM_VIS_ONDATA_ADDR) | (EEPROM.read(EEPROM_VIS_ONDATA_ADDR + 1) << 8);
+        mainDisplayMode = static_cast<MainDisplayMode>(EEPROM.read(EEPROM_MAIN_DISPLAY_ADDR));
+        isBigDigitsEnabled = EEPROM.read(EEPROM_BIGDIG_ADDR);
         // яркость и режим светодиода при желании можно считать здесь
     }
 }
@@ -48,22 +48,22 @@ void tick() {
             podMode++;
             switch (static_cast<Mode>(mode)) {
                 case Mode::LED_Mode:
-                    if (podMode > 4) podMode = 0;
+                    if (podMode >= LED_BIND_MODE_COUNT) podMode = 0;
                     LED::setMode(static_cast<UI::LEDBindMode>(podMode));
                     isChanged = true;
                     break;
                 case Mode::LED_Bright:
-                    if (podMode > 11) podMode = 0;
+                    if (podMode > LED_PRESET_MAX) podMode = 0;
                     LED::setBrightness(podMode);
                     isChanged = true;
                     break;
                 case Mode::LED_Manual:
-                    if (podMode > 11) podMode = 0;
+                    if (podMode > LED_PRESET_MAX) podMode = 0;
                     LED::setBrightness(podMode);
                     isChanged = true;
                     break;
                 case Mode::Menu:
-                    if (podMode > 15) podMode = 1;
+                    if (podMode > MENU_PODMODE_MAX) podMode = 1;
                     isChanged = true;
                     break;
                 default:
@@ -123,14 +123,14 @@ void tick() {
                 if (podMode >= 6 && podMode <= 17) VIS_ONDATA ^= (1 << (podMode - 6));
                 if (podMode == 1) {
                     // сохранить настройки массива и экрана
-                    EEPROM.write(2, MAX_ONDATA & 255);
-                    EEPROM.write(3, (MAX_ONDATA >> 8) & 255);
-                    EEPROM.write(4, VIS_ONDATA & 255);
-                    EEPROM.write(5, (VIS_ONDATA >> 8) & 255);
-                    EEPROM.write(6, static_cast<uint8_t>(mainDisplayMode));
-                    EEPROM.write(7, isBigDigitsEnabled);
+                    EEPROM.write(EEPROM_MAX_ONDATA_ADDR, MAX_ONDATA & 255);
+                    EEPROM.write(EEPROM_MAX_ONDATA_ADDR + 1, (MAX_ONDATA >> 8) & 255);
+                    EEPROM.write(EEPROM_VIS_ONDATA_ADDR, VIS_ONDATA & 255);
+                    EEPROM.write(EEPROM_VIS_ONDATA_ADDR + 1, (VIS_ONDATA >> 8) & 255);
+                    EEPROM.write(EEPROM_MAIN_DISPLAY_ADDR, static_cast<uint8_t>(mainDisplayMode));
+                    EEPROM.write(EEPROM_BIGDIG_ADDR, isBigDigitsEnabled);
                     // яркость и режим светодиода сохраняются в других ячейках
-                    EEPROM.write(0, 122);
+                    EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
                 }
                 if (podMode < 6) podMode = 1;
                 break;

@@ -8,11 +8,11 @@
 
 namespace Plot {
 
-static int tempHourArr[15], tempDayArr[15];
-static int humHourArr[15], humDayArr[15];
-static int pressHourArr[15], pressDayArr[15];
-static int altHourArr[15], altDayArr[15];
-static int co2HourArr[15], co2DayArr[15];
+static int tempHourArr[PLOT_SAMPLES], tempDayArr[PLOT_SAMPLES];
+static int humHourArr[PLOT_SAMPLES], humDayArr[PLOT_SAMPLES];
+static int pressHourArr[PLOT_SAMPLES], pressDayArr[PLOT_SAMPLES];
+static int altHourArr[PLOT_SAMPLES], altDayArr[PLOT_SAMPLES];
+static int co2HourArr[PLOT_SAMPLES], co2DayArr[PLOT_SAMPLES];
 
 static unsigned long hourPlotTimer;
 static unsigned long dayPlotTimer;
@@ -28,9 +28,9 @@ static int delta;
 
 void init() {
     // таймеры для LCD2004
-    hourPlotTimer = ((long)4 * 60 * 1000);
-    dayPlotTimer = ((long)1.6 * 60 * 60 * 1000);
-    predictTimer = ((long)10 * 60 * 1000);
+    hourPlotTimer = PLOT_HOUR_INTERVAL_MS;
+    dayPlotTimer = PLOT_DAY_INTERVAL_MS;
+    predictTimer = PREDICT_INTERVAL_MS;
     hourPlotTimerD = 0;
     dayPlotTimerD = 0;
     predictTimerD = 0;
@@ -57,58 +57,59 @@ bool testTimer(unsigned long& dataTimer, unsigned long setTimer) {
 
 void tick() {
     if (testTimer(hourPlotTimerD, hourPlotTimer)) {
-        for (byte i = 0; i < 14; i++) {
+        for (byte i = 0; i < PLOT_SAMPLES - 1; i++) {
             tempHourArr[i] = tempHourArr[i + 1];
             humHourArr[i] = humHourArr[i + 1];
             pressHourArr[i] = pressHourArr[i + 1];
             altHourArr[i] = altHourArr[i + 1];
             co2HourArr[i] = co2HourArr[i + 1];
         }
-        tempHourArr[14] = Sensors::getTemp();
-        humHourArr[14] = Sensors::getHumidity();
-        pressHourArr[14] = Sensors::getPres();
-        altHourArr[14] = Sensors::getAlt();
-        co2HourArr[14] = Sensors::getCO2();
+        tempHourArr[PLOT_SAMPLES - 1] = Sensors::getTemp();
+        humHourArr[PLOT_SAMPLES - 1] = Sensors::getHumidity();
+        pressHourArr[PLOT_SAMPLES - 1] = Sensors::getPres();
+        altHourArr[PLOT_SAMPLES - 1] = Sensors::getAlt();
+        co2HourArr[PLOT_SAMPLES - 1] = Sensors::getCO2();
     }
     if (testTimer(dayPlotTimerD, dayPlotTimer)) {
         long averTemp = 0, averHum = 0, averPress = 0, averAlt = 0, averCO2 = 0;
-        for (byte i = 0; i < 15; i++) {
+        for (byte i = 0; i < PLOT_SAMPLES; i++) {
             averTemp += tempHourArr[i];
             averHum += humHourArr[i];
             averPress += pressHourArr[i];
             averAlt += altHourArr[i];
             averCO2 += co2HourArr[i];
         }
-        averTemp /= 15;
-        averHum /= 15;
-        averPress /= 15;
-        averAlt /= 15;
-        averCO2 /= 15;
-        for (byte i = 0; i < 14; i++) {
+        averTemp /= PLOT_SAMPLES;
+        averHum /= PLOT_SAMPLES;
+        averPress /= PLOT_SAMPLES;
+        averAlt /= PLOT_SAMPLES;
+        averCO2 /= PLOT_SAMPLES;
+        for (byte i = 0; i < PLOT_SAMPLES - 1; i++) {
             tempDayArr[i] = tempDayArr[i + 1];
             humDayArr[i] = humDayArr[i + 1];
             pressDayArr[i] = pressDayArr[i + 1];
             altDayArr[i] = altDayArr[i + 1];
             co2DayArr[i] = co2DayArr[i + 1];
         }
-        tempDayArr[14] = averTemp;
-        humDayArr[14] = averHum;
-        pressDayArr[14] = averPress;
-        altDayArr[14] = averAlt;
-        co2DayArr[14] = averCO2;
+        tempDayArr[PLOT_SAMPLES - 1] = averTemp;
+        humDayArr[PLOT_SAMPLES - 1] = averHum;
+        pressDayArr[PLOT_SAMPLES - 1] = averPress;
+        altDayArr[PLOT_SAMPLES - 1] = averAlt;
+        co2DayArr[PLOT_SAMPLES - 1] = averCO2;
     }
     if (testTimer(predictTimerD, predictTimer)) {
         long averPress = 0;
-        for (byte i = 0; i < 10; i++) {
+        for (byte i = 0; i < PREDICT_SAMPLE_COUNT; i++) {
             // в данном месте подразумевается, что датчик BME280 будет доступен
             averPress += Sensors::getPres();
-            delay(1);
+            delay(PREDICT_READ_DELAY_MS);
         }
         averPress /= 10;
-        for (byte i = 0; i < 5; i++) {
+        averPress /= PREDICT_SAMPLE_COUNT;
+        for (byte i = 0; i < PRESSURE_SAMPLE_COUNT - 1; i++) {
             pressure_array[i] = pressure_array[i + 1];
         }
-        pressure_array[5] = averPress;
+        pressure_array[PRESSURE_SAMPLE_COUNT - 1] = averPress;
         sumX = sumY = sumX2 = sumXY = 0;
         for (int i = 0; i < 6; i++) {
             sumX += i;
@@ -116,10 +117,10 @@ void tick() {
             sumX2 += i * i;
             sumXY += (long)i * pressure_array[i];
         }
-        a = (long)6 * sumXY - (long)sumX * sumY;
-        a /= (6 * sumX2 - sumX * sumX);
-        delta = a * 6;
-        int rainPercent = map(delta, -250, 250, 100, -100);
+        a = (long)PRESSURE_SAMPLE_COUNT * sumXY - (long)sumX * sumY;
+        a /= (PRESSURE_SAMPLE_COUNT * sumX2 - sumX * sumX);
+        delta = a * PRESSURE_SAMPLE_COUNT;
+        int rainPercent = map(delta, PRESSURE_DELTA_MIN, PRESSURE_DELTA_MAX, RAIN_MAP_OUT_MIN, RAIN_MAP_OUT_MAX);
         Sensors::setRain(rainPercent);
     }
 }

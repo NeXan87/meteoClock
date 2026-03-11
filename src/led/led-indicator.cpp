@@ -49,7 +49,7 @@ void setBrightness(uint8_t b) {
 }
 
 static void computeBrightness() {
-    if (brightness == 11) {  // авто
+    if (brightness == LED_BRIGHT_AUTO) {  // авто
         int light = analogRead(PHOTO);
         if (light < BRIGHT_THRESHOLD) {
             ledOn = LED_BRIGHT_MIN;
@@ -95,7 +95,7 @@ void update() {
             r = ledOn;
             alertStatus = UI::AlertStatus::Critical;
         }
-        if (val >= BLINK_LED_CO2 && (millis() - lastBlink > 500)) {
+        if (val >= BLINK_LED_CO2 && (millis() - lastBlink > LED_BLINK_INTERVAL_MS)) {
             isBlinking = !isBlinking;
             lastBlink = millis();
             alertStatus = isBlinking ? UI::AlertStatus::Blinking : UI::AlertStatus::Critical;

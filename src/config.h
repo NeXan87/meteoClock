@@ -58,32 +58,77 @@
 #define DEFAULT_VIS_ONDATA 4095  // если EEPROM пуст, все графики отображаются
 
 // Пределы графиков
-#define TEMP_MIN 15
-#define TEMP_MAX 35
-#define HUM_MIN 0
-#define HUM_MAX 100
-#define PRESS_MIN 720
-#define PRESS_MAX 760
-#define CO2_MIN 400
-#define CO2_MAX 2000
-#define ALT_MIN 0
-#define ALT_MAX 1000
+#define TEMP_MIN 15    // минимальное значение шкалы температуры (°C)
+#define TEMP_MAX 35    // максимальное значение шкалы температуры (°C)
+#define HUM_MIN 0      // минимальное значение шкалы влажности (%)
+#define HUM_MAX 100    // максимальное значение шкалы влажности (%)
+#define PRESS_MIN 720  // минимальное значение шкалы давления (мм рт.ст. или используемая единица)
+#define PRESS_MAX 760  // максимальное значение шкалы давления
+#define CO2_MIN 400    // минимальное значение шкалы CO2 (ppm)
+#define CO2_MAX 2000   // максимальное значение шкалы CO2 (ppm)
+#define ALT_MIN 0      // минимальное значение шкалы высоты (м)
+#define ALT_MAX 1000   // максимальное значение шкалы высоты (м)
 
 // Адрес BME280 в библиотеке уже задан, если используете другой модуль
 // не забудьте поменять в библиотеке.
 
 // Аппаратные пины
-#define BACKLIGHT 10
-#define PHOTO A3
+#define BACKLIGHT 10  // пин управления подсветкой LCD (может быть PWM)
+#define PHOTO A3      // аналоговый вход фоторезистора (A3)
 
-#define MHZ_RX 2
-#define MHZ_TX 3
+#define MHZ_RX 2  // RX для MH-Z19 (SoftwareSerial)
+#define MHZ_TX 3  // TX для MH-Z19 (SoftwareSerial)
 
-#define LED_COM 7
-#define LED_R 9
-#define LED_G 6
-#define LED_B 5
-#define BTN_PIN 4
+#define LED_COM 7  // общий вывод RGB (анод/катод в зависимости от LED_MODE)
+#define LED_R 9    // PWM-пин канала красного
+#define LED_G 6    // PWM-пин канала зелёного
+#define LED_B 5    // PWM-пин канала синего
+#define BTN_PIN 4  // пин кнопки
 
-// Высота над уровнем моря, необходимая для расчета давления
+// Стандартное атмосферное давление на уровне моря (в гПа), используется для расчёта
 #define SEALEVELPRESSURE_HPA (1013.25)
+
+// Разметка EEPROM
+#define EEPROM_MAGIC_ADDR 0         // адрес ячейки с магическим маркером настроек
+#define EEPROM_MAGIC_VALUE 122      // значение-маркер, подтверждающее сохранённые настройки
+#define EEPROM_MAX_ONDATA_ADDR 2    // адрес младшего байта MAX_ONDATA в EEPROM
+#define EEPROM_VIS_ONDATA_ADDR 4    // адрес младшего байта VIS_ONDATA в EEPROM
+#define EEPROM_MAIN_DISPLAY_ADDR 6  // адрес байта, где хранится MainDisplayMode
+#define EEPROM_BIGDIG_ADDR 7        // адрес байта, где хранится флаг больших цифр (0/1)
+
+// Параметры LCD
+#define LCD_COLS 20          // количество столбцов LCD
+#define LCD_ROWS 4           // количество строк LCD
+#define LCD_PLOT_COLUMN 15   // колонка, где рисуется указатель/правая область графика
+#define LCD_VALUE_COLUMN 16  // колонка, где выводятся числовые значения справа
+
+// Константы графиков
+#define PLOT_SAMPLES 15                                                     // число точек в одном наборе графика (часовой/дневной)
+#define PLOT_WIDTH 15                                                       // ширина графика в символах
+#define PLOT_HEIGHT 4                                                       // высота графика в символах
+#define PLOT_HOUR_INTERVAL_MS (4UL * 60UL * 1000UL)                         // интервал обновления часового графика (мс)
+#define PLOT_DAY_INTERVAL_MS ((unsigned long)(1.6 * 60.0 * 60.0 * 1000.0))  // интервал обновления суточного графика (мс)
+#define PREDICT_INTERVAL_MS (10UL * 60UL * 1000UL)                          // интервал предсказания давления (мс)
+#define PREDICT_SAMPLE_COUNT 10                                             // число считываний для усреднения при предсказании
+#define PREDICT_READ_DELAY_MS 1                                             // задержка между быстрыми чтениями для предсказания (мс)
+#define PRESSURE_SAMPLE_COUNT 6                                             // количество значений давления для регрессии
+
+// Предсказание и сопоставление дождя
+#define PRESSURE_DELTA_MIN -250  // минимальный дельта-давления для map()
+#define PRESSURE_DELTA_MAX 250   // максимальный дельта-давления для map()
+#define RAIN_MAP_OUT_MIN 100     // верхняя граница выходного процента дождя
+#define RAIN_MAP_OUT_MAX -100    // нижняя граница выходного процента дождя
+
+// Константы LED
+#define LED_BRIGHT_AUTO 11         // значение яркости, означающее "авто"
+#define LED_PRESET_MAX 11          // максимальный индекс пресета яркости
+#define LED_BIND_MODE_COUNT 4      // число режимов привязки LED к датчикам
+#define LED_BLINK_INTERVAL_MS 500  // интервал мигания индикатора (мс)
+
+// Последовательный порт
+#define SERIAL_BAUD 115200  // скорость последовательного порта
+
+#define MENU_PODMODE_MAX 15  // максимальное значение podMode для меню
+
+// Границы карты графиков (по умолчанию заданы, повторно экспортируются)
+#define DEFAULT_PLOT_WIDTH PLOT_WIDTH  // переопределение для совместимости

@@ -16,7 +16,7 @@ static unsigned long plotTimer = 0;
 
 void setup() {
     // инициализация серийного порта для отладки
-    Serial.begin(115200);
+    Serial.begin(SERIAL_BAUD);
 
     Sensors::init();
     LED::init();
