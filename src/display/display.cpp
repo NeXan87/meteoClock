@@ -67,6 +67,13 @@ void init() {
     lcd.init();
     lcd.backlight();
     createCustomChars();
+    if (DEBUG) {
+        Serial.println("Display::init called");
+        // попробуем показать тестовый текст
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Display init");
+    }
 }
 
 void clear() {

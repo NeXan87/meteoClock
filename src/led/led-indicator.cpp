@@ -21,6 +21,10 @@ void init() {
     pinMode(LED_B, OUTPUT);
     pinMode(LED_COM, OUTPUT);
     analogWrite(LED_COM, 0);
+    if (DEBUG) {
+        Serial.println("LED::init called");
+        Serial.print("LED_MODE="); Serial.println(LED_MODE);
+    }
 }
 
 static void applyColor(uint8_t r, uint8_t g, uint8_t b) {
@@ -63,6 +67,11 @@ static void computeBrightness() {
 
 void update() {
     computeBrightness();
+
+    if (DEBUG) {
+        Serial.print("LED update: brightness="); Serial.print(brightness);
+        Serial.print(" ledOn="); Serial.println(ledOn);
+    }
 
     // выбор цвета в зависимости от режима и текущих показаний
     int val = 0;
