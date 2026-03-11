@@ -7,7 +7,10 @@
 #include "config.h"
 #include "plot/plot.h"        // для доступа к массивам графиков
 #include "sensors/sensors.h"  // для получения данных
+#include "ui/enums.h"
 #include "ui/ui.h"
+
+using UI::MainDisplayMode;
 
 namespace Display {
 
@@ -102,15 +105,15 @@ void drawSensors() {
     int hrs = Clock::getHours();
     int mins = Clock::getMinutes();
 
-    uint8_t mode0scr = UI::getMode0Scr();
+    MainDisplayMode mode0scr = static_cast<MainDisplayMode>(UI::getMode0Scr());
     bool isBig = UI::isBigDigits();
 
     // вывод для LCD2004
-    if (mode0scr != 2) {  // температура
+    if (mode0scr != MainDisplayMode::Temperature) {  // температура
         lcd.setCursor(0, 2);
         if (isBig) {
-            if (mode0scr == 1) lcd.setCursor(15, 2);
-            if (mode0scr != 1) lcd.setCursor(15, 0);
+            if (mode0scr == MainDisplayMode::CO2) lcd.setCursor(15, 2);
+            if (mode0scr != MainDisplayMode::CO2) lcd.setCursor(15, 0);
         }
         lcd.print(String(dispTemp, 1));
         lcd.write(223);
@@ -118,7 +121,7 @@ void drawSensors() {
         drawTemp(dispTemp, 0, 0);
     }
 
-    if (mode0scr != 4) {  // влажность
+    if (mode0scr != MainDisplayMode::Humidity) {  // влажность
         lcd.setCursor(5, 2);
         if (isBig) lcd.setCursor(15, 1);
         lcd.print(" " + String(dispHum) + "% ");
@@ -127,7 +130,7 @@ void drawSensors() {
     }
 
 #if (CO2_SENSOR == 1)
-    if (mode0scr != 1) {  // СО2
+    if (mode0scr != MainDisplayMode::CO2) {  // СО2
         if (isBig) {
             lcd.setCursor(15, 2);
             lcd.print(String(dispCO2) + "p");
@@ -140,17 +143,17 @@ void drawSensors() {
     }
 #endif
 
-    if (mode0scr != 3) {  // давление
+    if (mode0scr != MainDisplayMode::Pressure) {  // давление
         lcd.setCursor(0, 3);
-        if (isBig && mode0scr == 0) lcd.setCursor(15, 3);
-        if (isBig && (mode0scr == 1 || mode0scr == 2)) lcd.setCursor(15, 0);
-        if (isBig && mode0scr == 4) lcd.setCursor(15, 1);
-        if (!(isBig && mode0scr == 1)) lcd.print(String(dispPres) + "mm");
+        if (isBig && mode0scr == MainDisplayMode::Time) lcd.setCursor(15, 3);
+        if (isBig && (mode0scr == MainDisplayMode::CO2 || mode0scr == MainDisplayMode::Temperature)) lcd.setCursor(15, 0);
+        if (isBig && mode0scr == MainDisplayMode::Humidity) lcd.setCursor(15, 1);
+        if (!(isBig && mode0scr == MainDisplayMode::CO2)) lcd.print(String(dispPres) + "mm");
     } else {
         drawPres(dispPres, 0, 0);
     }
 
-    if (mode0scr != 5) {
+    if (mode0scr != MainDisplayMode::Altitude) {
         // ничего
     } else {
         drawAlt(dispAlt, 0, 0);
@@ -164,7 +167,7 @@ void drawSensors() {
         lcd.print(String(dispRain) + "%");
     }
 
-    if (mode0scr != 0) {
+    if (mode0scr != MainDisplayMode::Time) {
         lcd.setCursor(15, 3);
         if (hrs / 10 == 0) lcd.print(" ");
         lcd.print(hrs);
@@ -175,7 +178,7 @@ void drawSensors() {
         drawClock(hrs, mins, 0, 0);
         // мигающие точки между цифрами
         byte code = Clock::isDotOn() ? 165 : 32;
-        if (mode0scr == 0) {
+        if (mode0scr == MainDisplayMode::Time) {
             if (isBig) lcd.setCursor(7, 2);
             else lcd.setCursor(7, 0);
             lcd.write(code);

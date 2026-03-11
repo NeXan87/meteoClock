@@ -1,5 +1,7 @@
 #pragma once
 
+#include "plot/enums.h"
+
 namespace Plot {
 
 void init();

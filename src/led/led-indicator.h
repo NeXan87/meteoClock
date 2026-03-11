@@ -1,7 +1,9 @@
 #pragma once
-#include <Arduino.h>  // for uint8_t
+
+#include <Arduino.h>
 
 #include "config.h"
+#include "ui/enums.h"
 
 namespace LED {
 
@@ -14,8 +16,8 @@ void setColor(uint8_t r, uint8_t g, uint8_t b);
 // Обновить состояние (мигание, яркость)
 void update();
 
-// Установить режим привязки (0-co2,1-hum,2-temp,3-rain)
-void setMode(uint8_t m);
+// Установить режим привязки к датчику
+void setMode(UI::LEDBindMode m);
 
 // Установить яркость (0-11, 11 - авто)
 void setBrightness(uint8_t b);

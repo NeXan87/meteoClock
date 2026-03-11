@@ -6,6 +6,7 @@
 #include "config.h"
 #include "display/display.h"  // для обновления экрана при необходимости
 #include "sensors/sensors.h"
+#include "ui/enums.h"
 #include "ui/ui.h"
 
 namespace Clock {
@@ -44,7 +45,7 @@ void tick() {
         }
     }
     // всегда обновляем экран, если мы на главном режиме
-    if (UI::currentMode() == 0) {
+    if (UI::currentMode() == static_cast<uint8_t>(UI::Mode::Clock)) {
         Display::drawSensors();
     }
 }

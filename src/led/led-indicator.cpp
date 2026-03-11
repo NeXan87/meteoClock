@@ -4,14 +4,16 @@
 
 #include "config.h"
 #include "sensors/sensors.h"
+#include "ui/enums.h"
 
 namespace LED {
 
 static uint8_t brightness = LED_BRIGHT_MIN;  // 0..11 special
-static uint8_t mode = 0;                     // привязка
+static UI::LEDBindMode bindMode = UI::LEDBindMode::CO2;
 static uint8_t ledOn = 0;
 static bool isBlinking = false;
 static unsigned long lastBlink = 0;
+static UI::AlertStatus alertStatus = UI::AlertStatus::Normal;
 
 void init() {
     pinMode(LED_R, OUTPUT);
@@ -38,8 +40,8 @@ void setColor(uint8_t r, uint8_t g, uint8_t b) {
     applyColor(r, g, b);
 }
 
-void setMode(uint8_t m) {
-    mode = m;
+void setMode(UI::LEDBindMode m) {
+    bindMode = m;
 }
 
 void setBrightness(uint8_t b) {
@@ -64,30 +66,43 @@ void update() {
 
     // выбор цвета в зависимости от режима и текущих показаний
     int val = 0;
-    switch (mode) {
-        case 0: val = Sensors::getCO2(); break;
-        case 1: val = Sensors::getHumidity(); break;
-        case 2: val = Sensors::getTemp(); break;
-        case 3: val = Sensors::getRain(); break;
+    switch (bindMode) {
+        case UI::LEDBindMode::CO2:
+            val = Sensors::getCO2();
+            break;
+        case UI::LEDBindMode::Humidity:
+            val = Sensors::getHumidity();
+            break;
+        case UI::LEDBindMode::Temperature:
+            val = Sensors::getTemp();
+            break;
+        case UI::LEDBindMode::Rain:
+            val = Sensors::getRain();
+            break;
     }
-    // простая логика: зеленый нормальный, желтый средний, красный высокий
+
+    // простая логика: зелёный нормальный, жёлтый средний, красный высокий
     uint8_t r = 0, g = 0, b = 0;
-    if (mode == 0) {
+    if (bindMode == UI::LEDBindMode::CO2) {
         if (val < NORM_CO2) {
             g = ledOn;
+            alertStatus = UI::AlertStatus::Normal;
         } else if (val < MAX_CO2) {
             r = ledOn;
             g = ledOn / 2;
+            alertStatus = UI::AlertStatus::Warning;
         } else {
             r = ledOn;
+            alertStatus = UI::AlertStatus::Critical;
         }
         if (val >= BLINK_LED_CO2 && (millis() - lastBlink > 500)) {
             isBlinking = !isBlinking;
             lastBlink = millis();
+            alertStatus = isBlinking ? UI::AlertStatus::Blinking : UI::AlertStatus::Critical;
         }
     }
     // остальные режимы можно реализовать аналогично
-    if (isBlinking) {
+    if (isBlinking || alertStatus == UI::AlertStatus::Blinking) {
         applyColor(0, 0, 0);
     } else {
         applyColor(r, g, b);

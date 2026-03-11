@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "config.h"
+#include "plot/enums.h"
 #include "sensors/sensors.h"
 
 namespace Plot {
