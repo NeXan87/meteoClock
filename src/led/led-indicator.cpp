@@ -23,7 +23,8 @@ void init() {
     analogWrite(LED_COM, 0);
     if (DEBUG) {
         Serial.println("LED::init called");
-        Serial.print("LED_MODE="); Serial.println(LED_MODE);
+        Serial.print("LED_MODE=");
+        Serial.println(LED_MODE);
     }
 }
 
@@ -69,8 +70,10 @@ void update() {
     computeBrightness();
 
     if (DEBUG) {
-        Serial.print("LED update: brightness="); Serial.print(brightness);
-        Serial.print(" ledOn="); Serial.println(ledOn);
+        Serial.print("LED update: brightness=");
+        Serial.print(brightness);
+        Serial.print(" ledOn=");
+        Serial.println(ledOn);
     }
 
     // выбор цвета в зависимости от режима и текущих показаний
