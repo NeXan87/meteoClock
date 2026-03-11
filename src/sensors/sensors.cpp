@@ -1,4 +1,4 @@
-#include "Sensors.h"
+#include "sensors/sensors.h"
 
 #include <Adafruit_BME280.h>
 #include <Arduino.h>

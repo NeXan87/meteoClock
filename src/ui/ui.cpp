@@ -1,12 +1,12 @@
-#include "UI.h"
+#include "ui/ui.h"
 
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "ButtonManager.h"
-#include "Display.h"
-#include "LEDIndicator.h"
-#include "PlotManager.h"
+#include "button/button.h"
+#include "display/display.h"
+#include "led/led-indicator.h"
+#include "plot/plot.h"
 #include "config.h"
 
 namespace UI {

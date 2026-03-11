@@ -2,13 +2,13 @@
 #include <EEPROM.h>
 
 #include "config.h"
-#include "modules/ButtonManager.h"
-#include "modules/ClockManager.h"
-#include "modules/Display.h"
-#include "modules/LEDIndicator.h"
-#include "modules/PlotManager.h"
-#include "modules/Sensors.h"
-#include "modules/UI.h"
+#include "button/button.h"
+#include "clock/clock.h"
+#include "display/display.h"
+#include "led/led-indicator.h"
+#include "plot/plot.h"
+#include "sensors/sensors.h"
+#include "ui/ui.h"
 
 // таймеры
 static unsigned long sensorsTimer = 0;

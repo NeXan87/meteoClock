@@ -1,12 +1,12 @@
-#include "Display.h"
+#include "display/display.h"
 
 #include <Arduino.h>
 #include <Wire.h>
 
-#include "ClockManager.h"  // для времени
-#include "PlotManager.h"   // для доступа к массивам графиков
-#include "Sensors.h"       // для получения данных
-#include "UI.h"
+#include "clock/clock.h"  // для времени
+#include "plot/plot.h"   // для доступа к массивам графиков
+#include "sensors/sensors.h"       // для получения данных
+#include "ui/ui.h"
 #include "config.h"
 
 namespace Display {

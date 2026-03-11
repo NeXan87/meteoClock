@@ -1,11 +1,11 @@
-#include "ClockManager.h"
+#include "clock/clock.h"
 
 #include <Arduino.h>
 #include <RTClib.h>
 
-#include "Display.h"  // для обновления экрана при необходимости
-#include "Sensors.h"
-#include "UI.h"
+#include "display/display.h"  // для обновления экрана при необходимости
+#include "sensors/sensors.h"
+#include "ui/ui.h"
 #include "config.h"
 
 namespace Clock {

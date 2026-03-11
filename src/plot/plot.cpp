@@ -1,8 +1,8 @@
-#include "PlotManager.h"
+#include "plot/plot.h"
 
 #include <Arduino.h>
 
-#include "Sensors.h"
+#include "sensors/sensors.h"
 #include "config.h"
 
 namespace Plot {

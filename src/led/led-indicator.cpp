@@ -1,8 +1,8 @@
-#include "LEDIndicator.h"
+#include "led/led-indicator.h"
 
 #include <Arduino.h>
 
-#include "Sensors.h"
+#include "sensors/sensors.h"
 #include "config.h"
 
 namespace LED {
