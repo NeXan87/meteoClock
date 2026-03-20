@@ -104,6 +104,9 @@ void tick() {
         switch (static_cast<Mode>(mode)) {
             case Mode::Clock:
                 isBigDigitsEnabled = !isBigDigitsEnabled;
+                // сохранить флаг больших цифр в EEPROM
+                EEPROM.write(EEPROM_BIGDIG_ADDR, static_cast<uint8_t>(isBigDigitsEnabled));
+                EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
                 break;
             case Mode::LED_Mode:
                 mode = Mode::Menu;
