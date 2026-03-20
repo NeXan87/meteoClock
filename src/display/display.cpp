@@ -11,7 +11,7 @@
 #include "ui/ui.h"
 // character codes
 #ifndef CHAR_DOT_BIG
-#define CHAR_DOT_BIG 165
+#define CHAR_DOT_BIG 223
 #endif
 #ifndef CHAR_SPACE
 #define CHAR_SPACE 32
@@ -177,7 +177,7 @@ void drawSensors() {
             if (mode0scr != MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 0);
         }
         lcd.print(String(dispTemp, 1));
-        lcd.write(223);
+        lcd.write(239);
     } else {
         drawTemp(dispTemp, 0, 0);
     }
@@ -491,7 +491,7 @@ static void drawTemp(float dispTemp, int x, int y) {
         lcd.write(static_cast<uint8_t>(0B10100001));
     }
     lcd.setCursor(static_cast<uint8_t>(x + 13), static_cast<uint8_t>(y));
-    lcd.write(static_cast<uint8_t>(223));
+    lcd.write(static_cast<uint8_t>(239));
 }
 
 static void drawHum(int dispHum, int x, int y) {
