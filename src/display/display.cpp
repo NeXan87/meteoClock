@@ -357,10 +357,42 @@ static void drawDig(int dig, int x, int y) {
                 break;
         }
     } else {
-        // простые цифры: обычный вывод
-        lcd.setCursor(static_cast<uint8_t>(x), static_cast<uint8_t>(y));
-        if (dig == 10) lcd.print(' ');
-        else lcd.print(dig);
+        // двухстрочные цифры (как в оригинальном скетче)
+        switch (dig) {
+            case 0:
+                digSeg(x, y, 255, 1, 255, 255, 2, 255);
+                break;
+            case 1:
+                digSeg(x, y, 32, 255, 32, 32, 255, 32);
+                break;
+            case 2:
+                digSeg(x, y, 3, 3, 255, 255, 4, 4);
+                break;
+            case 3:
+                digSeg(x, y, 3, 3, 255, 4, 4, 255);
+                break;
+            case 4:
+                digSeg(x, y, 255, 0, 255, 5, 5, 255);
+                break;
+            case 5:
+                digSeg(x, y, 255, 3, 3, 4, 4, 255);
+                break;
+            case 6:
+                digSeg(x, y, 255, 3, 3, 255, 4, 255);
+                break;
+            case 7:
+                digSeg(x, y, 1, 1, 255, 32, 255, 32);
+                break;
+            case 8:
+                digSeg(x, y, 255, 3, 255, 255, 4, 255);
+                break;
+            case 9:
+                digSeg(x, y, 255, 3, 255, 4, 4, 255);
+                break;
+            case 10:
+                digSeg(x, y, 32, 32, 32, 32, 32, 32);
+                break;
+        }
     }
 }
 
