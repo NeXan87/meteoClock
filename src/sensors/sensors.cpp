@@ -26,6 +26,7 @@ static int rain = 0;  // вычисляется в PlotManager
 void init() {
     Wire.begin();
     bme.begin();
+    update();
 #if (CO2_SENSOR == 1)
     // библиотека ожидает порядок (TX, RX) как в оригинальном скетче
     mhz19.begin(MHZ_TX, MHZ_RX);
