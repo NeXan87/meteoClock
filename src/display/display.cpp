@@ -65,6 +65,8 @@ static uint8_t KD[8] = {0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b00000, 0b
 
 void init() {
     lcd.init();
+    lcd.backlight();
+    lcd.clear();
     pinMode(BACKLIGHT, OUTPUT);
     analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
     createCustomChars();
@@ -74,6 +76,47 @@ void init() {
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Display init");
+    }
+}
+
+// Таймеры для обновления яркости
+static unsigned long brightTimer = 2000;
+static unsigned long brightTimerD = 0;
+
+// Текущее значение яркости LCD (0..10, 11 - авто)
+static uint8_t LCD_BRIGHT = 11;
+
+// Автоматическая/ручная настройка яркости подсветки
+static void checkBrightness() {
+    int photoValue = analogRead(PHOTO);
+    static bool isDark = false;
+
+    if (isDark) {
+        if (photoValue > BRIGHT_THRESHOLD + BRIGHT_HYSTERESYS) {
+            isDark = false;
+        }
+    } else {
+        if (photoValue < BRIGHT_THRESHOLD - BRIGHT_HYSTERESYS) {
+            isDark = true;
+        }
+    }
+
+    if (LCD_BRIGHT == 11) {
+        if (isDark) {
+            analogWrite(BACKLIGHT, LCD_BRIGHT_MIN);
+        } else {
+            analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
+        }
+    } else {
+        analogWrite(BACKLIGHT, static_cast<int>(LCD_BRIGHT * LCD_BRIGHT * 2.5));
+    }
+}
+
+void tick() {
+    unsigned long now = millis();
+    if (now - brightTimerD >= brightTimer) {
+        brightTimerD = now;
+        checkBrightness();
     }
 }
 

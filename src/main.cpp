@@ -33,6 +33,7 @@ void setup() {
 void loop() {
     unsigned long now = millis();
 
+    Display::tick();
     Clock::tick();
     Button::tick();
     UI::tick();
