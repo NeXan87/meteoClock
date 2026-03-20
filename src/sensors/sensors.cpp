@@ -27,7 +27,8 @@ void init() {
     Wire.begin();
     bme.begin();
 #if (CO2_SENSOR == 1)
-    mhz19.begin(MHZ_RX, MHZ_TX);
+    // библиотека ожидает порядок (TX, RX) как в оригинальном скетче
+    mhz19.begin(MHZ_TX, MHZ_RX);
 #endif
 }
 
