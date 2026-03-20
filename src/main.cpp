@@ -13,6 +13,7 @@
 // таймеры
 static unsigned long sensorsTimer = 0;
 static unsigned long plotTimer = 0;
+static unsigned long clockTimer = 0;
 
 void setup() {
     // инициализация серийного порта для отладки
@@ -28,13 +29,18 @@ void setup() {
 
     sensorsTimer = millis();
     plotTimer = millis();
+    clockTimer = millis();
 }
 
 void loop() {
     unsigned long now = millis();
 
     Display::tick();
-    Clock::tick();
+    // тик часов — не чаще, чем раз в CLOCK_TICK_INTERVAL_MS
+    if (now - clockTimer >= CLOCK_TICK_INTERVAL_MS) {
+        clockTimer = now;
+        Clock::tick();
+    }
     Button::tick();
     UI::tick();
     LED::update();
