@@ -19,7 +19,13 @@ void update();
 // Установить режим привязки к датчику
 void setMode(UI::LEDBindMode m);
 
-// Установить яркость (0-11, 11 - авто)
+// Установить яркость (0-10 - ручная, 11 - авто)
 void setBrightness(uint8_t b);
+
+// Получить текущую яркость
+uint8_t getBrightness();
+
+// Получить текущий режим привязки
+UI::LEDBindMode getMode();
 
 }  // namespace LED

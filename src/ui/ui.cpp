@@ -36,7 +36,9 @@ void init() {
         VIS_ONDATA = EEPROM.read(EEPROM_VIS_ONDATA_ADDR) | (EEPROM.read(EEPROM_VIS_ONDATA_ADDR + 1) << 8);
         mainDisplayMode = static_cast<MainDisplayMode>(EEPROM.read(EEPROM_MAIN_DISPLAY_ADDR));
         isBigDigitsEnabled = EEPROM.read(EEPROM_BIGDIG_ADDR);
-        // яркость и режим светодиода при желании можно считать здесь
+        // яркость и режим светодиода
+        LED::setBrightness(EEPROM.read(EEPROM_LED_BRIGHT_ADDR));
+        LED::setMode(static_cast<UI::LEDBindMode>(EEPROM.read(EEPROM_LED_TYPE_ADDR)));
     }
 }
 
@@ -132,7 +134,9 @@ void tick() {
                     EEPROM.write(EEPROM_VIS_ONDATA_ADDR + 1, static_cast<uint8_t>((VIS_ONDATA >> 8) & 255));
                     EEPROM.write(EEPROM_MAIN_DISPLAY_ADDR, static_cast<uint8_t>(mainDisplayMode));
                     EEPROM.write(EEPROM_BIGDIG_ADDR, static_cast<uint8_t>(isBigDigitsEnabled));
-                    // яркость и режим светодиода сохраняются в других ячейках
+                    // яркость и режим светодиода
+                    EEPROM.write(EEPROM_LED_BRIGHT_ADDR, LED::getBrightness());
+                    EEPROM.write(EEPROM_LED_TYPE_ADDR, static_cast<uint8_t>(LED::getMode()));
                     EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
                 }
                 if (podMode < 6) podMode = 1;

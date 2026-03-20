@@ -97,6 +97,9 @@
 #define EEPROM_VIS_ONDATA_ADDR 4    // адрес младшего байта VIS_ONDATA в EEPROM
 #define EEPROM_MAIN_DISPLAY_ADDR 6  // адрес байта, где хранится MainDisplayMode
 #define EEPROM_BIGDIG_ADDR 7        // адрес байта, где хранится флаг больших цифр (0/1)
+#define EEPROM_LED_BRIGHT_ADDR 8    // адрес байта, где хранится яркость LED (0-10, 11=auto)
+#define EEPROM_LCD_BRIGHT_ADDR 9    // адрес байта, где хранится яркость LCD (0-10, 11=auto)
+#define EEPROM_LED_TYPE_ADDR 10     // адрес байта, где хранится режим привязки LED
 
 // Параметры LCD
 #define LCD_COLS 20          // количество столбцов LCD

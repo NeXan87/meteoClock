@@ -8,12 +8,17 @@
 
 namespace LED {
 
-static uint8_t brightness = LED_BRIGHT_MIN;  // 0..11 special
+static uint8_t brightness = LED_BRIGHT_MIN;  // 0..10 - ручная яркость
+static bool isAutoBrightness = true;         // true = авто, false = ручная
 static UI::LEDBindMode bindMode = UI::LEDBindMode::CO2;
 static uint8_t ledOn = 0;
 static bool isBlinking = false;
 static unsigned long lastBlink = 0;
 static UI::AlertStatus alertStatus = UI::AlertStatus::Normal;
+
+// для автояркости с гистерезисом
+static bool isDark = false;
+static unsigned long brightTimer = 0;
 
 void init() {
     pinMode(LED_R, OUTPUT);
@@ -50,24 +55,73 @@ void setMode(UI::LEDBindMode m) {
 }
 
 void setBrightness(uint8_t b) {
-    brightness = b;
+    if (b == 11) {
+        isAutoBrightness = true;
+    } else {
+        isAutoBrightness = false;
+        brightness = b;
+        ledOn = static_cast<uint8_t>(b * b * 2.5);
+    }
 }
 
-static void computeBrightness() {
-    if (brightness == LED_BRIGHT_AUTO) {  // авто
-        int light = analogRead(PHOTO);
-        if (light < BRIGHT_THRESHOLD) {
-            ledOn = static_cast<uint8_t>(LED_BRIGHT_MIN);
-        } else {
-            ledOn = static_cast<uint8_t>(LED_BRIGHT_MAX);
+uint8_t getBrightness() {
+    return isAutoBrightness ? 11 : brightness;
+}
+
+UI::LEDBindMode getMode() {
+    return bindMode;
+}
+
+static void checkBrightness() {
+    int photoValue = analogRead(PHOTO);
+
+    // гистерезис как в оригинале
+    if (isDark) {
+        // Сейчас темно → переключаемся в "светло", только если сигнал УВЕРЕННО выше порога
+        if (photoValue > BRIGHT_THRESHOLD + BRIGHT_HYSTERESYS) {
+            isDark = false;
         }
     } else {
-        ledOn = static_cast<uint8_t>(brightness * brightness * 2.5);
+        // Сейчас светло → переключаемся в "темно", только если сигнал УВЕРЕННО ниже порога
+        if (photoValue < BRIGHT_THRESHOLD - BRIGHT_HYSTERESYS) {
+            isDark = true;
+        }
+    }
+
+    if (isAutoBrightness) {
+        if (isDark) {
+#if (LED_MODE == 0)
+            ledOn = LED_BRIGHT_MIN;
+#else
+            ledOn = 255 - LED_BRIGHT_MIN;
+#endif
+        } else {
+#if (LED_MODE == 0)
+            ledOn = LED_BRIGHT_MAX;
+#else
+            ledOn = 255 - LED_BRIGHT_MAX;
+#endif
+        }
+    }
+    // если не авто - ledOn уже установлен в setBrightness()
+
+    if (DEBUG) {
+        Serial.print("photo=");
+        Serial.print(photoValue);
+        Serial.print(" isDark=");
+        Serial.print(isDark);
+        Serial.print(" ledOn=");
+        Serial.println(ledOn);
     }
 }
 
 void update() {
-    computeBrightness();
+    // вызываем checkBrightness каждые 2 секунды как в оригинале
+    unsigned long now = millis();
+    if (now - brightTimer >= 2000) {
+        brightTimer = now;
+        checkBrightness();
+    }
 
     if (DEBUG) {
         Serial.print("LED update: brightness=");
