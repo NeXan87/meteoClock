@@ -369,9 +369,9 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
         lcd.setCursor(0, 0);
 
         lcd.print("HACTPO");  // Настройки
-        lcd.write(RUS_J);     // символ "Й" для слова "Настройки"
+        lcd.write(RUS.J);     // символ "Й" для слова "Настройки"
         lcd.print("K");       // Настройки
-        lcd.write(RUS_I);     // символ "И" для слова "Настройки"
+        lcd.write(RUS.I);     // символ "И" для слова "Настройки"
         lcd.print(":");       // Настройки
 
         lcd.setCursor(0, 1);
