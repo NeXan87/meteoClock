@@ -5,8 +5,10 @@
 
 #include "clock/clock.h"  // для времени
 #include "config.h"
-#include "plot/plot.h"        // для доступа к массивам графиков
-#include "sensors/sensors.h"  // для получения данных
+#include "display/custom-chars.h"
+#include "led/led-indicator.h"  // для яркости LED в меню
+#include "plot/plot.h"          // для доступа к массивам графиков
+#include "sensors/sensors.h"    // для получения данных
 #include "ui/enums.h"
 #include "ui/ui.h"
 // character codes
@@ -66,19 +68,6 @@ static uint8_t UT[8] = {0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b00000, 0b
 
 static uint8_t KU[8] = {0b00000, 0b00000, 0b00000, 0b00001, 0b00010, 0b00100, 0b01000, 0b10000};  // для верхней части %
 static uint8_t KD[8] = {0b00001, 0b00010, 0b00100, 0b01000, 0b10000, 0b00000, 0b00000, 0b00000};  // для нижней части %
-
-// русские буквы, встречающиеся в меню
-[[maybe_unused]] static uint8_t PP[8] = {0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b00000};  // П
-[[maybe_unused]] static uint8_t BB[8] = {0b11111, 0b10000, 0b10000, 0b11111, 0b10001, 0b10001, 0b11111, 0b00000};  // Б
-[[maybe_unused]] static uint8_t CH[8] = {0b10001, 0b10001, 0b10001, 0b01111, 0b00001, 0b00001, 0b00001, 0b00000};  // Ч
-[[maybe_unused]] static uint8_t II[8] = {0b10001, 0b10001, 0b10011, 0b10101, 0b11001, 0b10001, 0b10001, 0b00000};  // И
-[[maybe_unused]] static uint8_t BM[8] = {0b10000, 0b10000, 0b10000, 0b11110, 0b10001, 0b10001, 0b11110, 0b00000};  // Ь
-[[maybe_unused]] static uint8_t IY[8] = {0b01100, 0b00001, 0b10011, 0b10101, 0b11001, 0b10001, 0b10001, 0b00000};  // Й
-[[maybe_unused]] static uint8_t DD[8] = {0b01110, 0b01010, 0b01010, 0b01010, 0b01010, 0b01010, 0b11111, 0b10001};  // Д
-[[maybe_unused]] static uint8_t AA[8] = {0b11100, 0b00010, 0b00001, 0b00111, 0b00001, 0b00010, 0b11100, 0b00000};  // Э
-[[maybe_unused]] static uint8_t IA[8] = {0b01111, 0b10001, 0b10001, 0b01111, 0b00101, 0b01001, 0b10001, 0b00000};  // Я
-[[maybe_unused]] static uint8_t YY[8] = {0b10001, 0b10001, 0b10001, 0b11101, 0b10011, 0b10011, 0b11101, 0b00000};  // Ы
-[[maybe_unused]] static uint8_t GG[8] = {0b11110, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b00000};  // Г
 // конец дополнительной графики
 
 void init() {
@@ -360,6 +349,137 @@ void redrawPlot(uint8_t mode) {
         case 10:
             drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, ALT_MIN, ALT_MAX, (int*)Plot::altDay(), "m ", "da", mode);
             break;
+    }
+}
+
+// предыдущее значение podMode для отрисовки меню
+static uint8_t menuPrevPodMode = 255;
+static uint8_t menuPrevMode = 255;  // для отслеживания входа в меню
+
+void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
+    // создаём русские символы при входе в меню или смене podMode
+    if (menuPrevMode != mode || menuPrevPodMode != podMode) {
+        lcd.clear();
+        menuPrevPodMode = podMode;
+        menuPrevMode = mode;
+    }
+
+    // главное меню (mode == Mode::Menu)
+    if (mode == 255) {
+        lcd.setCursor(0, 0);
+
+        lcd.print("HACTPO");  // Настройки
+        lcd.write(RUS_J);     // символ "Й" для слова "Настройки"
+        lcd.print("K");       // Настройки
+        lcd.write(RUS_I);     // символ "И" для слова "Настройки"
+        lcd.print(":");       // Настройки
+
+        lcd.setCursor(0, 1);
+        switch (podMode) {
+            case 1:
+                lcd.print("COXPAH\165T\173");  // Сохранить
+                break;
+            case 2:
+                lcd.print("B\6XO\3");  // Выход
+                break;
+            case 3:
+                lcd.print("\5PK.\4H\3\4KATOPA");  // Ярк.индик.
+                break;
+            case 4:
+                lcd.print("\5PK.\7KPAHA");  // Ярк.экрана
+                break;
+            case 5:
+                lcd.print("PE\10.\4H\3\4KATOPA");  // Реж.индик.
+                break;
+        }
+
+        if (podMode >= 6 && podMode <= 17) {
+            lcd.setCursor(10, 0);
+            lcd.print("\7PA\10\4KOB");  // графиков
+
+            lcd.setCursor(0, 1);
+            // CO2
+            if ((3 & (1 << (podMode - 6))) != 0) lcd.print("CO2 ");
+            // Влажность
+            if ((12 & (1 << (podMode - 6))) != 0) lcd.print("B\5,% ");
+            // Температура
+            if ((48 & (1 << (podMode - 6))) != 0) lcd.print("t\337 ");
+            // Давление
+            if ((192 & (1 << (podMode - 6))) != 0) {
+#if CO2_SENSOR == 1
+                lcd.print("p,rain ");
+#else
+                lcd.print("p,mmPT ");
+#endif
+            }
+            // Высота
+            if ((768 & (1 << (podMode - 6))) != 0) lcd.print("B\6C,m  ");
+
+            // Часы/дни
+            if ((1365 & (1 << (podMode - 6))) != 0) {
+                lcd.setCursor(8, 1);
+                lcd.print("\3AC:");  // Час:
+            } else {
+                lcd.setCursor(7, 1);
+                lcd.print("\3EH\1:");  // День:
+            }
+
+            // Вкл/выкл
+            if ((visOnData & (1 << (podMode - 6))) != 0) {
+                lcd.print("BK\5 ");  // ВКЛ
+            } else {
+                lcd.print("B\6K\5");  // ВЫКЛ
+            }
+        }
+    }
+
+    // режим индикатора (mode == Mode::LED_Mode)
+    if (mode == 252) {
+        lcd.setCursor(0, 0);
+        lcd.print("PE\10.\4H\3\4KATOPA:");  // Реж.индикатора:
+        lcd.setCursor(0, 1);
+        switch (podMode) {
+            case 0:
+                lcd.print("CO2   ");
+                break;
+            case 1:
+                lcd.print("B\6A\10H.");  // влажн.
+                break;
+            case 2:
+                lcd.print("t\337     ");
+                break;
+            case 3:
+                lcd.print("OCA\3K\5");  // осадки
+                break;
+            case 4:
+                lcd.print("\3AB\6EH\5E");  // давление
+                break;
+        }
+    }
+
+    // яркость экрана (mode == Mode::LED_Bright)
+    if (mode == 253) {
+        lcd.setCursor(0, 0);
+        lcd.print("\5PK.\7KPAHA:");  // Ярк.экрана:
+        // значение яркости нужно получить из LED модуля
+        uint8_t lcdBright = 11;  // заглушка, нужно передавать параметром
+        if (lcdBright == 11) {
+            lcd.print("ABTO ");
+        } else {
+            lcd.print(String(lcdBright * 10) + "%");
+        }
+    }
+
+    // яркость индикатора (mode == Mode::LED_Manual)
+    if (mode == 254) {
+        lcd.setCursor(0, 0);
+        lcd.print("\5PK.\4H\3\4K.:");  // Ярк.индик.:
+        uint8_t ledBright = LED::getBrightness();
+        if (ledBright == 11) {
+            lcd.print("ABTO ");
+        } else {
+            lcd.print(String(ledBright * 10) + "%");
+        }
     }
 }
 

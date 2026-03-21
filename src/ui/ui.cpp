@@ -157,9 +157,12 @@ void tick() {
             Plot::tick();
             Display::redrawPlot(static_cast<uint8_t>(mode));
         } else {
-            // меню и настройки пока обрабатываются Display/другими модулями
-            Display::clear();
+            // меню и настройки
+            Display::drawMenu(static_cast<uint8_t>(mode), podMode, VIS_ONDATA);
         }
+    } else if (mode >= Mode::LED_Mode) {
+        // в режиме меню перерисовываем при каждом tick для обновления значений
+        Display::drawMenu(static_cast<uint8_t>(mode), podMode, VIS_ONDATA);
     }
 }
 

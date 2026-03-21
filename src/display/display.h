@@ -29,4 +29,7 @@ void tick();
 // Сбросить состояние дисплея (для принудительной перерисовки)
 void resetState();
 
+// Отрисовка меню
+void drawMenu(uint8_t mode, uint8_t podMode, int visOnData);
+
 }  // namespace Display
