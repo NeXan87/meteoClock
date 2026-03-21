@@ -151,6 +151,7 @@ void tick() {
         // когда режим изменился, перерисовываем экран через модуль Display
         if (mode == Mode::Clock) {
             Display::clear();
+            Display::resetState();  // сбросить состояние для полной перерисовки
             Display::drawSensors();
         } else if (mode <= Mode::Sensor10) {
             Plot::tick();

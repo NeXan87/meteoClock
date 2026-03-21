@@ -26,4 +26,7 @@ void redrawPlot(uint8_t mode);
 // Обновление модуля (таймеры, автояркость и пр.)
 void tick();
 
+// Сбросить состояние дисплея (для принудительной перерисовки)
+void resetState();
+
 }  // namespace Display

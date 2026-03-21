@@ -39,6 +39,24 @@ static uint8_t row1[8] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 
 // другие наборы символов (буквы, цифры)
 // ... (для краткости не всё включено здесь) можно добавить по необходимости
 
+// текущее состояние дисплея для сравнения
+struct DisplayState {
+    float temp = -999.0f;
+    uint8_t humidity = 255;
+    int pres = -1;
+    int co2 = -1;
+    float alt = -9999.0f;
+    int rain = -1;
+    int hours = -1;
+    int minutes = -1;
+    bool dotOn = false;
+    uint8_t mode0scr = 255;
+    bool isBigDigits = false;
+    bool initialized = false;
+};
+
+static DisplayState prevState;  // состояние для сравнения в крупном режиме
+
 // массивы, используемые для построения больших цифр (переписаны из оригинального скетча)
 static uint8_t UB[8] = {0b11111, 0b11111, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};   // для двустрочных 7,0 и четырехстрочных 2,3,4,5,6,8,9
 static uint8_t UMB[8] = {0b11111, 0b11111, 0b11111, 0b00000, 0b00000, 0b00000, 0b11111, 0b11111};  // для двустрочных 2,3,5,6,8,9
@@ -120,6 +138,10 @@ void tick() {
     }
 }
 
+void resetState() {
+    prevState = DisplayState();  // сброс состояния для крупного режима
+}
+
 void clear() {
     lcd.clear();
 }
@@ -135,6 +157,7 @@ void createCustomChars() {
     lcd.createChar(7, row2);
     lcd.createChar(0, row1);
     // дополнительные символы для русских букв и индикаторов можно определить при необходимости
+    prevState.initialized = false;  // сброс состояния при пересоздании символов
 }
 
 // главная функция, выводящая все показания на экран
@@ -169,76 +192,119 @@ void drawSensors() {
     MainDisplayMode mode0scr = static_cast<MainDisplayMode>(UI::getMode0Scr());
     bool isBig = UI::isBigDigits();
 
-    // вывод для LCD2004
-    if (mode0scr != MainDisplayMode::Temperature) {  // температура
-        lcd.setCursor(0, 2);
-        if (isBig) {
-            if (mode0scr == MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 2);
-            if (mode0scr != MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 0);
-        }
-        lcd.print(String(dispTemp, 1));
-        lcd.write(239);
-    } else {
-        drawTemp(dispTemp, 0, 0);
+    // проверка на первую инициализацию или смену режима
+    bool forceRedraw = !prevState.initialized ||
+                       prevState.mode0scr != static_cast<uint8_t>(mode0scr) ||
+                       prevState.isBigDigits != isBig;
+
+    // при смене режима сбрасываем prevState для корректного сравнения
+    if (forceRedraw) {
+        prevState = DisplayState();
     }
 
-    if (mode0scr != MainDisplayMode::Humidity) {  // влажность
-        lcd.setCursor(5, 2);
-        if (isBig) lcd.setCursor(LCD_PLOT_COLUMN, 1);
-        lcd.print(" " + String(dispHum) + "% ");
-    } else {
-        drawHum(dispHum, 0, 0);
+    // вывод для LCD2004
+    if (forceRedraw || dispTemp != prevState.temp) {
+        if (mode0scr != MainDisplayMode::Temperature) {  // температура
+            lcd.setCursor(0, 2);
+            if (isBig) {
+                if (mode0scr == MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 2);
+                if (mode0scr != MainDisplayMode::CO2) lcd.setCursor(LCD_PLOT_COLUMN, 0);
+            }
+            lcd.print(String(dispTemp, 1));
+            lcd.write(239);
+        } else {
+            drawTemp(dispTemp, 0, 0);
+        }
+
+        prevState.temp = dispTemp;
+    }
+
+    if (forceRedraw || dispHum != prevState.humidity) {
+        if (mode0scr != MainDisplayMode::Humidity) {  // влажность
+            lcd.setCursor(5, 2);
+            if (isBig) lcd.setCursor(LCD_PLOT_COLUMN, 1);
+            lcd.print(" " + String(dispHum) + "% ");
+            prevState.humidity = dispHum;
+        } else {
+            drawHum(dispHum, 0, 0);
+        }
+
+        prevState.humidity = dispHum;
     }
 
 #if (CO2_SENSOR == 1)
-    if (mode0scr != MainDisplayMode::CO2) {  // СО2
-        if (isBig) {
-            lcd.setCursor(LCD_PLOT_COLUMN, 2);
-            lcd.print(String(dispCO2) + "p");
+    if (forceRedraw || dispCO2 != prevState.co2) {
+        if (mode0scr != MainDisplayMode::CO2) {  // СО2
+            if (isBig) {
+                lcd.setCursor(LCD_PLOT_COLUMN, 2);
+                lcd.print(String(dispCO2) + "p");
+            } else {
+                lcd.setCursor(11, 2);
+                lcd.print(String(dispCO2) + "ppm ");
+            }
         } else {
-            lcd.setCursor(11, 2);
-            lcd.print(String(dispCO2) + "ppm ");
+            drawPPM(dispCO2, 0, 0);
         }
-    } else {
-        drawPPM(dispCO2, 0, 0);
+
+        prevState.co2 = dispCO2;
     }
 #endif
 
-    if (mode0scr != MainDisplayMode::Pressure) {  // давление
-        lcd.setCursor(0, 3);
-        if (isBig && mode0scr == MainDisplayMode::Time) lcd.setCursor(LCD_PLOT_COLUMN, 3);
-        if (isBig && (mode0scr == MainDisplayMode::CO2 || mode0scr == MainDisplayMode::Temperature)) lcd.setCursor(LCD_PLOT_COLUMN, 0);
-        if (isBig && mode0scr == MainDisplayMode::Humidity) lcd.setCursor(LCD_PLOT_COLUMN, 1);
-        if (!(isBig && mode0scr == MainDisplayMode::CO2)) lcd.print(String(dispPres) + "mm");
-    } else {
-        drawPres(dispPres, 0, 0);
+    if (forceRedraw || dispPres != prevState.pres) {
+        if (mode0scr != MainDisplayMode::Pressure) {  // давление
+            lcd.setCursor(0, 3);
+            if (isBig && mode0scr == MainDisplayMode::Time) lcd.setCursor(LCD_PLOT_COLUMN, 3);
+            if (isBig && (mode0scr == MainDisplayMode::CO2 || mode0scr == MainDisplayMode::Temperature)) lcd.setCursor(LCD_PLOT_COLUMN, 0);
+            if (isBig && mode0scr == MainDisplayMode::Humidity) lcd.setCursor(LCD_PLOT_COLUMN, 1);
+            if (!(isBig && mode0scr == MainDisplayMode::CO2)) lcd.print(String(dispPres) + "mm");
+        } else {
+            drawPres(dispPres, 0, 0);
+        }
+
+        prevState.pres = dispPres;
     }
 
-    if (mode0scr != MainDisplayMode::Altitude) {
-        // ничего
-    } else {
-        drawAlt(dispAlt, 0, 0);
+    if (forceRedraw || dispAlt != prevState.alt) {
+        if (mode0scr != MainDisplayMode::Altitude) {
+            // ничего
+        } else {
+            drawAlt(dispAlt, 0, 0);
+        }
+
+        prevState.alt = dispAlt;
     }
 
-    if (!isBig) {
-        lcd.setCursor(5, 3);
-        lcd.print(" rain     ");
-        lcd.setCursor(11, 3);
-        if (dispRain < 0) lcd.setCursor(10, 3);
-        lcd.print(String(dispRain) + "%");
+    if (forceRedraw || dispRain != prevState.rain) {
+        if (!isBig) {
+            lcd.setCursor(5, 3);
+            lcd.print(" rain     ");
+            lcd.setCursor(11, 3);
+            if (dispRain < 0) lcd.setCursor(10, 3);
+            lcd.print(String(dispRain) + "%");
+        }
+
+        prevState.rain = dispRain;
     }
 
-    if (mode0scr != MainDisplayMode::Time) {
-        lcd.setCursor(LCD_PLOT_COLUMN, 3);
-        if (hrs / 10 == 0) lcd.print(" ");
-        lcd.print(hrs);
-        lcd.print(":");
-        if (mins / 10 == 0) lcd.print("0");
-        lcd.print(mins);
-    } else {
-        drawClock(hrs, mins, 0, 0);
-        // мигающие точки между цифрами
-        byte code = Clock::isDotOn() ? CHAR_DOT_BIG : CHAR_SPACE;
+    if (hrs != prevState.hours || mins != prevState.minutes) {
+        if (mode0scr != MainDisplayMode::Time) {
+            lcd.setCursor(LCD_PLOT_COLUMN, 3);
+            if (hrs / 10 == 0) lcd.print(" ");
+            lcd.print(hrs);
+            lcd.print(":");
+            if (mins / 10 == 0) lcd.print("0");
+            lcd.print(mins);
+        } else {
+            drawClock(hrs, mins, 0, 0);
+        }
+
+        prevState.hours = hrs;
+        prevState.minutes = mins;
+    }
+
+    // мигающие точки между цифрами
+    byte code = Clock::isDotOn() ? CHAR_DOT_BIG : CHAR_SPACE;
+    if (forceRedraw || code != (prevState.dotOn ? CHAR_DOT_BIG : CHAR_SPACE)) {
         if (mode0scr == MainDisplayMode::Time) {
             if (isBig) lcd.setCursor(7, 2);
             else lcd.setCursor(7, 0);
@@ -250,7 +316,13 @@ void drawSensors() {
             lcd.setCursor(LCD_PLOT_COLUMN + 2, 3);
             lcd.write(code);
         }
+
+        prevState.dotOn = Clock::isDotOn();
     }
+
+    prevState.mode0scr = static_cast<uint8_t>(mode0scr);
+    prevState.isBigDigits = isBig;
+    prevState.initialized = true;
 }
 
 void redrawPlot(uint8_t mode) {
