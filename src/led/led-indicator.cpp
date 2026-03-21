@@ -147,15 +147,14 @@ void update() {
             break;
     }
 
-    // простая логика: зелёный нормальный, жёлтый средний, красный высокий
+    // простая логика: зелёный нормальный, синий средний, красный высокий
     uint8_t r = 0, g = 0, b = 0;
     if (bindMode == UI::LEDBindMode::CO2) {
         if (val < NORM_CO2) {
             g = ledOn;
             alertStatus = UI::AlertStatus::Normal;
         } else if (val < MAX_CO2) {
-            r = ledOn;
-            g = ledOn / 2;
+            b = ledOn;
             alertStatus = UI::AlertStatus::Warning;
         } else {
             r = ledOn;
