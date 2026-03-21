@@ -696,9 +696,9 @@ static void drawPlot(int pos, int row, int width, int height, int min_val, int m
 
     if (min_val >= max_val) max_val = min_val + 1;
     lcd.setCursor(LCD_PLOT_COLUMN, 1);
-    lcd.write(0b01111100);
+    lcd.write(209);
     lcd.setCursor(LCD_PLOT_COLUMN, 2);
-    lcd.write(0b01111100);
+    lcd.write(209);
 
     lcd.setCursor(LCD_VALUE_COLUMN, 0);
     lcd.print(max_value);
