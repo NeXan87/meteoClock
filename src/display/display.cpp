@@ -171,7 +171,7 @@ void drawSensors() {
     // каждый раз обновляем кастомные символы для часов/цифр
     loadClock();
 
-    float dispTemp = Sensors::getTemp();
+    float dispTemp = Sensors::getTemp() + TEMP_OFFSET;
     uint8_t dispHum = Sensors::getHumidity();
     int dispPres = Sensors::getPres();
     int dispCO2 = Sensors::getCO2();
