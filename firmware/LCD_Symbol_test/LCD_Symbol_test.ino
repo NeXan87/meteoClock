@@ -10,7 +10,7 @@ LiquidCrystal_I2C lcd(DISPLAY_ADDR, DISPLAY_COLS, DISPLAY_ROWS);
 
 unsigned long lastUpdate = 0;
 const unsigned long delayMs = 1500; // задержка между символами
-byte charIndex = 0;
+byte charIndex = 160;
 
 void setup() {
   pinMode(10, OUTPUT);

@@ -8,6 +8,7 @@ struct RUS_CHARS {
     const byte D = 224;    // Д
     const byte YO = 162;   // Ё
     const byte ZH = 163;   // Ж
+    const byte Z = 164;    // З
     const byte I = 165;    // И
     const byte J = 166;    // Й
     const byte L = 167;    // Л

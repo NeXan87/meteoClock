@@ -160,6 +160,9 @@ static void drawAlt(float dispAlt, int x, int y);
 static void drawPlot(int pos, int row, int width, int height,
                      int min_val, int max_val, int* plot_array,
                      const char* label1, const char* label2, int stretch);
+static void drawIndicatorMode();
+static void drawBridLCD();
+static void drawBridLED();
 
 static void loadClock();
 static void loadPlot();
@@ -367,43 +370,79 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
     // главное меню (mode == Mode::Menu)
     if (mode == 255) {
         lcd.setCursor(0, 0);
+        // НАСТРОЙКИ
+        lcd.print("HACTPO");
+        lcd.write(RUS.J);
+        lcd.print("K");
+        lcd.write(RUS.I);
 
-        lcd.print("HACTPO");  // Настройки
-        lcd.write(RUS.J);     // символ "Й" для слова "Настройки"
-        lcd.print("K");       // Настройки
-        lcd.write(RUS.I);     // символ "И" для слова "Настройки"
-        lcd.print(":");       // Настройки
+        if (podMode >= 6 && podMode <= 17) {
+            lcd.print(" ");
+        } else {
+            lcd.print(":");
+        }
 
         lcd.setCursor(0, 1);
         switch (podMode) {
             case 1:
-                lcd.print("COXPAH\165T\173");  // Сохранить
+                // СОХРАНИТЬ
+                lcd.print("COXPAH");
+                lcd.write(RUS.I);
+                lcd.print("T");
+                lcd.write(RUS.sft);
                 break;
             case 2:
-                lcd.print("B\6XO\3");  // Выход
+                // ВЫХОД
+                lcd.print("B");
+                lcd.write(RUS.Y);
+                lcd.print("XO");
+                lcd.write(RUS.D);
                 break;
             case 3:
-                lcd.print("\5PK.\4H\3\4KATOPA");  // Ярк.индик.
+                // ЯРК.ИНДИКАТОРА
+                drawBridLED();
                 break;
             case 4:
-                lcd.print("\5PK.\7KPAHA");  // Ярк.экрана
+                // ЯРК.ЭКРАНА
+                drawBridLCD();
                 break;
             case 5:
-                lcd.print("PE\10.\4H\3\4KATOPA");  // Реж.индик.
+                // РЕЖ.ИНДИКАТОРА
+                drawIndicatorMode();
                 break;
         }
 
         if (podMode >= 6 && podMode <= 17) {
             lcd.setCursor(10, 0);
-            lcd.print("\7PA\10\4KOB");  // графиков
+
+            // ГРАФИКОВ
+            lcd.write(RUS.G);
+            lcd.print("PA");
+            lcd.write(RUS.F);
+            lcd.write(RUS.I);
+            lcd.print("KOB:");
 
             lcd.setCursor(0, 1);
             // CO2
-            if ((3 & (1 << (podMode - 6))) != 0) lcd.print("CO2 ");
+            if ((3 & (1 << (podMode - 6))) != 0) {
+                lcd.print("CO2,ppm");
+            }
+
             // Влажность
-            if ((12 & (1 << (podMode - 6))) != 0) lcd.print("B\5,% ");
+            if ((12 & (1 << (podMode - 6))) != 0) {
+                // ВЛ,%
+                lcd.print("B");
+                lcd.write(RUS.L);
+                lcd.print(",% ");
+            }
+
             // Температура
-            if ((48 & (1 << (podMode - 6))) != 0) lcd.print("t\337 ");
+            if ((48 & (1 << (podMode - 6))) != 0) {
+                lcd.print("t,");
+                lcd.write(239);
+                lcd.print("C");
+            }
+
             // Давление
             if ((192 & (1 << (podMode - 6))) != 0) {
 #if CO2_SENSOR == 1
@@ -412,23 +451,42 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
                 lcd.print("p,mmPT ");
 #endif
             }
+
             // Высота
-            if ((768 & (1 << (podMode - 6))) != 0) lcd.print("B\6C,m  ");
+            if ((768 & (1 << (podMode - 6))) != 0) {
+                // ВЫС,м
+                lcd.print("B");
+                lcd.write(RUS.Y);
+                lcd.print("C,");
+                lcd.write(RUS.m);
+                lcd.print("  ");
+            }
 
             // Часы/дни
             if ((1365 & (1 << (podMode - 6))) != 0) {
-                lcd.setCursor(8, 1);
-                lcd.print("\3AC:");  // Час:
+                lcd.setCursor(9, 1);
+                // ЧАС:
+                lcd.write(RUS.CH);
+                lcd.print("AC:");
             } else {
-                lcd.setCursor(7, 1);
-                lcd.print("\3EH\1:");  // День:
+                // ДЕНЬ:
+                lcd.setCursor(9, 1);
+                lcd.write(RUS.D);
+                lcd.print("EH");
+                lcd.write(RUS.sft);
+                lcd.print(":");
             }
 
             // Вкл/выкл
             if ((visOnData & (1 << (podMode - 6))) != 0) {
-                lcd.print("BK\5 ");  // ВКЛ
+                // ВКЛ
+                lcd.print("BK");
+                lcd.write(RUS.L);
+                lcd.print("  ");
             } else {
-                lcd.print("B\6K\5");  // ВЫКЛ
+                // ОТКЛ
+                lcd.print("OTK");
+                lcd.write(RUS.L);
             }
         }
     }
@@ -436,23 +494,45 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
     // режим индикатора (mode == Mode::LED_Mode)
     if (mode == 252) {
         lcd.setCursor(0, 0);
-        lcd.print("PE\10.\4H\3\4KATOPA:");  // Реж.индикатора:
+        drawIndicatorMode();
+        lcd.print(":");
         lcd.setCursor(0, 1);
         switch (podMode) {
             case 0:
                 lcd.print("CO2   ");
                 break;
             case 1:
-                lcd.print("B\6A\10H.");  // влажн.
+                // ВЛАЖНОСТЬ
+                lcd.print("B");
+                lcd.write(RUS.L);
+                lcd.print("A");
+                lcd.write(RUS.ZH);
+                lcd.print("HOCT");
+                lcd.write(RUS.sft);
                 break;
             case 2:
-                lcd.print("t\337     ");
+                // ТЕМПЕРАТУРА
+                lcd.print("TEM");
+                lcd.write(RUS.P);
+                lcd.print("EPAT");
+                lcd.write(RUS.U);
+                lcd.print("PA");
                 break;
             case 3:
-                lcd.print("OCA\3K\5");  // осадки
+                // ОСАДКИ
+                lcd.print("OCA");
+                lcd.write(RUS.D);
+                lcd.print("K");
+                lcd.write(RUS.I);
                 break;
             case 4:
-                lcd.print("\3AB\6EH\5E");  // давление
+                // ДАВЛЕНИЕ
+                lcd.write(RUS.D);
+                lcd.print("AB");
+                lcd.write(RUS.L);
+                lcd.print("EH");
+                lcd.write(RUS.I);
+                lcd.print("E");
                 break;
         }
     }
@@ -460,11 +540,13 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
     // яркость экрана (mode == Mode::LED_Bright)
     if (mode == 253) {
         lcd.setCursor(0, 0);
-        lcd.print("\5PK.\7KPAHA:");  // Ярк.экрана:
+        drawBridLCD();
+        lcd.print(":");
         // значение яркости нужно получить из LED модуля
         uint8_t lcdBright = 11;  // заглушка, нужно передавать параметром
+        lcd.setCursor(0, 1);
         if (lcdBright == 11) {
-            lcd.print("ABTO ");
+            lcd.print("ABTO");
         } else {
             lcd.print(String(lcdBright * 10) + "%");
         }
@@ -473,10 +555,12 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
     // яркость индикатора (mode == Mode::LED_Manual)
     if (mode == 254) {
         lcd.setCursor(0, 0);
-        lcd.print("\5PK.\4H\3\4K.:");  // Ярк.индик.:
+        drawBridLED();
+        lcd.print(":");
         uint8_t ledBright = LED::getBrightness();
+        lcd.setCursor(0, 1);
         if (ledBright == 11) {
-            lcd.print("ABTO ");
+            lcd.print("ABTO");
         } else {
             lcd.print(String(ledBright * 10) + "%");
         }
@@ -677,13 +761,13 @@ static void drawTemp(float dispTemp, int x, int y) {
 
     if (UI::isBigDigits()) {
         lcd.setCursor(static_cast<uint8_t>(x + 7), static_cast<uint8_t>(y + 3));
-        lcd.write(static_cast<uint8_t>(1));  // десятичная точка
+        lcd.write(1);  // десятичная точка
     } else {
         lcd.setCursor(static_cast<uint8_t>(x + 7), static_cast<uint8_t>(y + 1));
-        lcd.write(static_cast<uint8_t>(0B10100001));
+        lcd.write(46);
     }
     lcd.setCursor(static_cast<uint8_t>(x + 13), static_cast<uint8_t>(y));
-    lcd.write(static_cast<uint8_t>(239));
+    lcd.write(239);
 }
 
 static void drawHum(int dispHum, int x, int y) {
@@ -694,9 +778,11 @@ static void drawHum(int dispHum, int x, int y) {
     drawDig(static_cast<int>(dispHum) % 10, x + 8, y);
     if (UI::isBigDigits()) {
         lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 1));
-        lcd.print("\245\4");
+        lcd.write(239);
+        lcd.print("\4");
         lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 2));
-        lcd.print("\5\245");
+        lcd.print("\5");
+        lcd.write(239);
     } else {
         lcd.setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 1));
         lcd.print("%");
@@ -777,4 +863,32 @@ static void loadPlot() {
     lcd.createChar(7, row7);
 }
 
+// РЕЖ.ИНДИКАТОРА
+static void drawIndicatorMode() {
+    lcd.print("PE");
+    lcd.write(RUS.ZH);
+    lcd.print(".");
+    lcd.write(RUS.I);
+    lcd.print("H");
+    lcd.write(RUS.D);
+    lcd.write(RUS.I);
+    lcd.print("KATOPA");
+}
+
+static void drawBridLCD() {
+    lcd.write(RUS.YA);
+    lcd.print("PK.");
+    lcd.write(RUS.E);
+    lcd.print("KPAHA");
+}
+
+static void drawBridLED() {
+    lcd.write(RUS.YA);
+    lcd.print("PK.");
+    lcd.write(RUS.I);
+    lcd.print("H");
+    lcd.write(RUS.D);
+    lcd.write(RUS.I);
+    lcd.print("KATOPA");
+}
 }  // namespace Display
