@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "clock/clock.h"
 #include "config.h"
 #include "display/display.h"
 #include "drivers/bme280.h"
 #include "drivers/button.h"
 #include "drivers/lcd.h"
 #include "drivers/mhz19.h"
+#include "drivers/rtc.h"
 #include "led/led-indicator.h"
 #include "plot/plot.h"
 #include "ui/ui.h"
@@ -27,7 +27,7 @@ void setup() {
     BME280::init();
     LED::init();
     LCD::init();
-    Clock::init();
+    RTC::init();
     Plot::init();
     UI::init();
 
@@ -43,7 +43,7 @@ void loop() {
     // тик часов — не чаще, чем раз в CLOCK_TICK_INTERVAL_MS
     if (now - clockTimer >= CLOCK_TICK_INTERVAL_MS) {
         clockTimer = now;
-        Clock::tick();
+        RTC::tick();
     }
     Button::tick();
     UI::tick();

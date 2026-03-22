@@ -2,12 +2,12 @@
 
 #include <Wire.h>
 
-#include "clock/clock.h"  // для времени
 #include "config.h"
 #include "display/custom-chars.h"
 #include "drivers/bme280.h"  // для получения данных
 #include "drivers/lcd.h"
 #include "drivers/mhz19.h"
+#include "drivers/rtc.h"        // для времени
 #include "led/led-indicator.h"  // для яркости LED в меню
 #include "plot/plot.h"          // для доступа к массивам графиков
 #include "ui/enums.h"
@@ -164,8 +164,8 @@ void drawSensors() {
 #endif
     int dispRain = BME280::getRain();
 
-    int hrs = Clock::getHours();
-    int mins = Clock::getMinutes();
+    int hrs = RTC::getHours();
+    int mins = RTC::getMinutes();
 
     MainDisplayMode mode0scr = static_cast<MainDisplayMode>(UI::getMode0Scr());
     bool isBig = UI::isBigDigits();
@@ -273,7 +273,7 @@ void drawSensors() {
     }
 
     // мигающие точки между цифрами
-    byte code = Clock::isDotOn() ? CHAR_DOT_BIG : CHAR_SPACE;
+    byte code = RTC::isDotOn() ? CHAR_DOT_BIG : CHAR_SPACE;
     if (forceRedraw || code != (prevState.dotOn ? CHAR_DOT_BIG : CHAR_SPACE)) {
         if (mode0scr == MainDisplayMode::Time) {
             if (isBig) LCD::setCursor(7, 2);
@@ -287,7 +287,7 @@ void drawSensors() {
             LCD::write(code);
         }
 
-        prevState.dotOn = Clock::isDotOn();
+        prevState.dotOn = RTC::isDotOn();
     }
 
     prevState.mode0scr = static_cast<uint8_t>(mode0scr);

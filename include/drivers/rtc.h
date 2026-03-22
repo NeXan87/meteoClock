@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Clock {
+namespace RTC {
 
 void init();
 void tick();
@@ -11,4 +11,4 @@ int getSeconds();
 
 bool isDotOn();
 
-}  // namespace Clock
+}  // namespace RTC

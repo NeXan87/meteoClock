@@ -1,4 +1,4 @@
-#include "clock/clock.h"
+#include "drivers/rtc.h"
 
 #include <Arduino.h>
 #include <RTClib.h>
@@ -9,7 +9,7 @@
 #include "ui/enums.h"
 #include "ui/ui.h"
 
-namespace Clock {
+namespace RTC {
 
 static RTC_DS3231 rtc;
 static DateTime now;
@@ -56,4 +56,4 @@ int getSeconds() { return secs; }
 
 bool isDotOn() { return isDotOnFlag; }
 
-}  // namespace Clock
+}  // namespace RTC
