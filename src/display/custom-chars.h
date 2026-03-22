@@ -54,4 +54,4 @@ struct RUS_CHARS {
     const byte ya = 199;   // я
 };
 
-RUS_CHARS RUS;
+extern RUS_CHARS RUS;

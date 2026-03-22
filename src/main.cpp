@@ -5,6 +5,7 @@
 #include "clock/clock.h"
 #include "config.h"
 #include "display/display.h"
+#include "drivers/lcd.h"
 #include "led/led-indicator.h"
 #include "plot/plot.h"
 #include "sensors/sensors.h"
@@ -21,7 +22,7 @@ void setup() {
 
     Sensors::init();
     LED::init();
-    Display::init();
+    LCD::init();
     Button::init();
     Clock::init();
     Plot::init();

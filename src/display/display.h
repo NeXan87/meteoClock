@@ -1,12 +1,9 @@
 #pragma once
-#include <LiquidCrystal_I2C.h>
+#include <Arduino.h>
 
 #include "config.h"
 
 namespace Display {
-
-// Инициализация дисплея
-void init();
 
 // Очистить экран
 void clear();
