@@ -12,7 +12,6 @@ namespace Plot {
 static int tempHourArr[PLOT_SAMPLES], tempDayArr[PLOT_SAMPLES];
 static int humHourArr[PLOT_SAMPLES], humDayArr[PLOT_SAMPLES];
 static int pressHourArr[PLOT_SAMPLES], pressDayArr[PLOT_SAMPLES];
-static int altHourArr[PLOT_SAMPLES], altDayArr[PLOT_SAMPLES];
 static int co2HourArr[PLOT_SAMPLES], co2DayArr[PLOT_SAMPLES];
 
 static unsigned long hourPlotTimer;
@@ -42,8 +41,6 @@ void init() {
     memset(humDayArr, 0, sizeof(humDayArr));
     memset(pressHourArr, 0, sizeof(pressHourArr));
     memset(pressDayArr, 0, sizeof(pressDayArr));
-    memset(altHourArr, 0, sizeof(altHourArr));
-    memset(altDayArr, 0, sizeof(altDayArr));
     memset(co2HourArr, 0, sizeof(co2HourArr));
     memset(co2DayArr, 0, sizeof(co2DayArr));
 }
@@ -62,13 +59,11 @@ void tick() {
             tempHourArr[i] = tempHourArr[i + 1];
             humHourArr[i] = humHourArr[i + 1];
             pressHourArr[i] = pressHourArr[i + 1];
-            altHourArr[i] = altHourArr[i + 1];
             co2HourArr[i] = co2HourArr[i + 1];
         }
         tempHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getTemp());
         humHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getHumidity());
         pressHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getPres());
-        altHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getAlt());
 #if (CO2_SENSOR == 1)
         co2HourArr[PLOT_SAMPLES - 1] = static_cast<int>(MHZ19::getCO2());
 #else
@@ -76,30 +71,26 @@ void tick() {
 #endif
     }
     if (testTimer(dayPlotTimerD, dayPlotTimer)) {
-        long averTemp = 0, averHum = 0, averPress = 0, averAlt = 0, averCO2 = 0;
+        long averTemp = 0, averHum = 0, averPress = 0, averCO2 = 0;
         for (byte i = 0; i < PLOT_SAMPLES; i++) {
             averTemp += tempHourArr[i];
             averHum += humHourArr[i];
             averPress += pressHourArr[i];
-            averAlt += altHourArr[i];
             averCO2 += co2HourArr[i];
         }
         averTemp /= PLOT_SAMPLES;
         averHum /= PLOT_SAMPLES;
         averPress /= PLOT_SAMPLES;
-        averAlt /= PLOT_SAMPLES;
         averCO2 /= PLOT_SAMPLES;
         for (byte i = 0; i < PLOT_SAMPLES - 1; i++) {
             tempDayArr[i] = tempDayArr[i + 1];
             humDayArr[i] = humDayArr[i + 1];
             pressDayArr[i] = pressDayArr[i + 1];
-            altDayArr[i] = altDayArr[i + 1];
             co2DayArr[i] = co2DayArr[i + 1];
         }
         tempDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averTemp);
         humDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averHum);
         pressDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averPress);
-        altDayArr[PLOT_SAMPLES - 1] = static_cast<int>(averAlt);
         co2DayArr[PLOT_SAMPLES - 1] = static_cast<int>(averCO2);
     }
     if (testTimer(predictTimerD, predictTimer)) {
@@ -136,8 +127,6 @@ int* humHour() { return humHourArr; }
 int* humDay() { return humDayArr; }
 int* pressHour() { return pressHourArr; }
 int* pressDay() { return pressDayArr; }
-int* altHour() { return altHourArr; }
-int* altDay() { return altDayArr; }
 int* co2Hour() { return co2HourArr; }
 int* co2Day() { return co2DayArr; }
 

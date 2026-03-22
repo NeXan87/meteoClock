@@ -74,7 +74,7 @@ void tick() {
         } else {
             do {
                 mode = static_cast<Mode>(static_cast<uint8_t>(mode) + 1);
-                if (mode > Mode::Sensor10) mode = Mode::Clock;
+                if (mode > Mode::Sensor8) mode = Mode::Clock;
 #if (CO2_SENSOR == 0)
                 if (mode == Mode::Sensor1) mode = Mode::Sensor3;
 #endif
@@ -84,14 +84,17 @@ void tick() {
         }
     }
     if (Button::isDouble()) {
-        if (mode > Mode::Clock && mode <= Mode::Sensor10) {
+        if (mode > Mode::Clock && mode <= Mode::Sensor8) {
             MAX_ONDATA ^= (1 << (static_cast<uint8_t>(mode) - 1));
         } else if (mode == Mode::Clock) {
-            mainDisplayMode = static_cast<MainDisplayMode>(static_cast<uint8_t>(mainDisplayMode) + 1);
+            if (mainDisplayMode >= MainDisplayMode::Humidity) {
+                mainDisplayMode = MainDisplayMode::Time;
+            } else {
+                mainDisplayMode = static_cast<MainDisplayMode>(static_cast<uint8_t>(mainDisplayMode) + 1);
+            }
 #if (CO2_SENSOR == 0)
             if (mainDisplayMode == MainDisplayMode::CO2) mainDisplayMode = static_cast<MainDisplayMode>(static_cast<uint8_t>(mainDisplayMode) + 1);
 #endif
-            if (mainDisplayMode > MainDisplayMode::Altitude) mainDisplayMode = MainDisplayMode::Time;
         } else if (mode >= Mode::LED_Mode) {
             podMode = 1;
         }
@@ -153,7 +156,7 @@ void tick() {
             Display::clear();
             Display::resetState();  // сбросить состояние для полной перерисовки
             Display::drawSensors();
-        } else if (mode <= Mode::Sensor10) {
+        } else if (mode <= Mode::Sensor8) {
             Plot::tick();
             Display::redrawPlot(static_cast<uint8_t>(mode));
         } else {

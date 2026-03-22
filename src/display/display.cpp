@@ -47,7 +47,6 @@ struct DisplayState {
     uint8_t humidity = 255;
     int pres = -1;
     int co2 = -1;
-    float alt = -9999.0f;
     int rain = -1;
     int hours = -1;
     int minutes = -1;
@@ -141,7 +140,6 @@ static void drawTemp(float dispTemp, int x, int y);
 static void drawHum(int dispHum, int x, int y);
 static void drawPPM(int dispCO2, int x, int y);
 static void drawPres(int dispPres, int x, int y);
-static void drawAlt(float dispAlt, int x, int y);
 static void drawPlot(int pos, int row, int width, int height,
                      int min_val, int max_val, int* plot_array,
                      const char* label1, const char* label2, int stretch);
@@ -164,7 +162,6 @@ void drawSensors() {
 #else
     int dispCO2 = 0;
 #endif
-    float dispAlt = BME280::getAlt();
     int dispRain = BME280::getRain();
 
     int hrs = Clock::getHours();
@@ -247,16 +244,6 @@ void drawSensors() {
         prevState.pres = dispPres;
     }
 
-    if (forceRedraw || dispAlt != prevState.alt) {
-        if (mode0scr != MainDisplayMode::Altitude) {
-            // ничего
-        } else {
-            drawAlt(dispAlt, 0, 0);
-        }
-
-        prevState.alt = dispAlt;
-    }
-
     if (forceRedraw || dispRain != prevState.rain) {
         if (!isBig) {
             LCD::setCursor(5, 3);
@@ -336,12 +323,6 @@ void redrawPlot(uint8_t mode) {
             break;
         case 8:
             drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, PRESS_MIN, PRESS_MAX, (int*)Plot::pressDay(), "p ", "da", mode);
-            break;
-        case 9:
-            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, ALT_MIN, ALT_MAX, (int*)Plot::altHour(), "m ", "hr", mode);
-            break;
-        case 10:
-            drawPlot(0, 3, PLOT_WIDTH, PLOT_HEIGHT, ALT_MIN, ALT_MAX, (int*)Plot::altDay(), "m ", "da", mode);
             break;
     }
 }
@@ -441,16 +422,6 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
 #else
                 LCD::print("p,mmPT ");
 #endif
-            }
-
-            // Высота
-            if ((768 & (1 << (podMode - 6))) != 0) {
-                // ВЫС,м
-                LCD::print("B");
-                LCD::write(RUS.Y);
-                LCD::print("C,");
-                LCD::write(RUS.m);
-                LCD::print("  ");
             }
 
             // Часы/дни
@@ -796,29 +767,6 @@ static void drawPres(int dispPres, int x, int y) {
     drawDig(dispPres % 10, x + 8, y);
     LCD::setCursor(static_cast<uint8_t>(x + 11), static_cast<uint8_t>(1 + (UI::isBigDigits()) * 2));
     LCD::print("mm");
-}
-
-static void drawAlt(float dispAlt, int x, int y) {
-    if (dispAlt >= 1000) {
-        drawDig((static_cast<int>(dispAlt) % 10000) / 1000, x, y);
-        x += 4;
-    }
-    drawDig((static_cast<int>(dispAlt) % 1000) / 100, x, y);
-    drawDig((static_cast<int>(dispAlt) % 100) / 10, x + 4, y);
-    drawDig(static_cast<int>(dispAlt) % 10, x + 8, y);
-    if (dispAlt < 1000) {
-        LCD::setCursor(static_cast<uint8_t>(x + 12), static_cast<uint8_t>(y + 1 + (UI::isBigDigits()) * 2));
-        LCD::printInt(static_cast<int>(dispAlt * 10.0f) % 10);
-        if (UI::isBigDigits()) LCD::setCursor(static_cast<uint8_t>(x + 11), static_cast<uint8_t>(y + 3));
-        else LCD::setCursor(static_cast<uint8_t>(x + 11), static_cast<uint8_t>(y + 1));
-        LCD::print(".");
-        x -= 1;
-    } else {
-        x -= 4;
-    }
-    if (UI::isBigDigits()) LCD::setCursor(static_cast<uint8_t>(x + 14), 3);
-    else LCD::setCursor(static_cast<uint8_t>(x + 14), 1);
-    LCD::print("m");
 }
 
 static void loadClock() {
