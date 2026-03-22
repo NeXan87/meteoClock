@@ -3,8 +3,9 @@
 #include <Arduino.h>
 
 #include "config.h"
+#include "drivers/bme280.h"
+#include "drivers/mhz19.h"
 #include "plot/enums.h"
-#include "sensors/sensors.h"
 
 namespace Plot {
 
@@ -64,11 +65,15 @@ void tick() {
             altHourArr[i] = altHourArr[i + 1];
             co2HourArr[i] = co2HourArr[i + 1];
         }
-        tempHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getTemp());
-        humHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getHumidity());
-        pressHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getPres());
-        altHourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getAlt());
-        co2HourArr[PLOT_SAMPLES - 1] = static_cast<int>(Sensors::getCO2());
+        tempHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getTemp());
+        humHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getHumidity());
+        pressHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getPres());
+        altHourArr[PLOT_SAMPLES - 1] = static_cast<int>(BME280::getAlt());
+#if (CO2_SENSOR == 1)
+        co2HourArr[PLOT_SAMPLES - 1] = static_cast<int>(MHZ19::getCO2());
+#else
+        co2HourArr[PLOT_SAMPLES - 1] = 0;
+#endif
     }
     if (testTimer(dayPlotTimerD, dayPlotTimer)) {
         long averTemp = 0, averHum = 0, averPress = 0, averAlt = 0, averCO2 = 0;
@@ -101,7 +106,7 @@ void tick() {
         long averPress = 0;
         for (byte i = 0; i < PREDICT_SAMPLE_COUNT; i++) {
             // в данном месте подразумевается, что датчик BME280 будет доступен
-            averPress += static_cast<long>(Sensors::getPres());
+            averPress += static_cast<long>(BME280::getPres());
             delay(PREDICT_READ_DELAY_MS);
         }
         averPress /= 10;
@@ -121,7 +126,7 @@ void tick() {
         a /= (PRESSURE_SAMPLE_COUNT * sumX2 - sumX * sumX);
         delta = a * PRESSURE_SAMPLE_COUNT;
         int rainPercent = map(delta, PRESSURE_DELTA_MIN, PRESSURE_DELTA_MAX, RAIN_MAP_OUT_MIN, RAIN_MAP_OUT_MAX);
-        Sensors::setRain(rainPercent);
+        BME280::setRain(rainPercent);
     }
 }
 

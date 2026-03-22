@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-namespace Sensors {
+namespace BME280 {
 
 // Инициализация датчиков
 void init();
@@ -13,13 +13,11 @@ void update();
 
 // Получить последнее значение
 float getTemp();
-uint8_t getHumidity();
-int getPres();
-int getCO2();
+float getHumidity();
+float getPres();
+float getCO2();
 float getAlt();
 int getRain();
-
-// внутреннее: прогноз осадков вычисляется в PlotManager
 void setRain(int r);
 
-}  // namespace Sensors
+}  // namespace BME280

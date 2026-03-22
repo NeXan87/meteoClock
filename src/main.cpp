@@ -1,14 +1,15 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "button/button.h"
 #include "clock/clock.h"
 #include "config.h"
 #include "display/display.h"
+#include "drivers/bme280.h"
+#include "drivers/button.h"
 #include "drivers/lcd.h"
+#include "drivers/mhz19.h"
 #include "led/led-indicator.h"
 #include "plot/plot.h"
-#include "sensors/sensors.h"
 #include "ui/ui.h"
 
 // таймеры
@@ -20,10 +21,12 @@ void setup() {
     // инициализация серийного порта для отладки
     Serial.begin(SERIAL_BAUD);
 
-    Sensors::init();
+#if (CO2_SENSOR == 1)
+    MHZ19::init();
+#endif
+    BME280::init();
     LED::init();
     LCD::init();
-    Button::init();
     Clock::init();
     Plot::init();
     UI::init();
@@ -48,7 +51,7 @@ void loop() {
 
     if (now - sensorsTimer >= SENS_TIME) {
         sensorsTimer = now;
-        Sensors::update();
+        BME280::update();
     }
 
     // обновление графиков выполняется в UI или PlotManager

@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "display/display.h"  // для обновления экрана при необходимости
-#include "sensors/sensors.h"
+#include "drivers/bme280.h"
 #include "ui/enums.h"
 #include "ui/ui.h"
 

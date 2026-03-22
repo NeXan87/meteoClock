@@ -3,9 +3,7 @@
 
 namespace Button {
 
-void init();
 void tick();
-
 bool isSingle();
 bool isDouble();
 bool isTriple();

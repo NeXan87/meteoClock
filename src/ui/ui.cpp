@@ -3,9 +3,9 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#include "button/button.h"
 #include "config.h"
 #include "display/display.h"
+#include "drivers/button.h"
 #include "led/led-indicator.h"
 #include "plot/plot.h"
 #include "ui/enums.h"

@@ -5,10 +5,11 @@
 #include "clock/clock.h"  // для времени
 #include "config.h"
 #include "display/custom-chars.h"
+#include "drivers/bme280.h"  // для получения данных
 #include "drivers/lcd.h"
+#include "drivers/mhz19.h"
 #include "led/led-indicator.h"  // для яркости LED в меню
 #include "plot/plot.h"          // для доступа к массивам графиков
-#include "sensors/sensors.h"    // для получения данных
 #include "ui/enums.h"
 #include "ui/ui.h"
 
@@ -155,12 +156,16 @@ void drawSensors() {
     // каждый раз обновляем кастомные символы для часов/цифр
     loadClock();
 
-    float dispTemp = Sensors::getTemp() + TEMP_OFFSET;
-    uint8_t dispHum = Sensors::getHumidity();
-    int dispPres = Sensors::getPres();
-    int dispCO2 = Sensors::getCO2();
-    float dispAlt = Sensors::getAlt();
-    int dispRain = Sensors::getRain();
+    float dispTemp = BME280::getTemp() + TEMP_OFFSET;
+    uint8_t dispHum = BME280::getHumidity();
+    int dispPres = BME280::getPres();
+#if (CO2_SENSOR == 1)
+    int dispCO2 = MHZ19::getCO2();
+#else
+    int dispCO2 = 0;
+#endif
+    float dispAlt = BME280::getAlt();
+    int dispRain = BME280::getRain();
 
     int hrs = Clock::getHours();
     int mins = Clock::getMinutes();

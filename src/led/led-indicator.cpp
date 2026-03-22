@@ -3,7 +3,8 @@
 #include <Arduino.h>
 
 #include "config.h"
-#include "sensors/sensors.h"
+#include "drivers/bme280.h"
+#include "drivers/mhz19.h"
 #include "ui/enums.h"
 
 namespace LED {
@@ -134,16 +135,20 @@ void update() {
     int val = 0;
     switch (bindMode) {
         case UI::LEDBindMode::CO2:
-            val = Sensors::getCO2();
+#if (CO2_SENSOR == 1)
+            val = MHZ19::getCO2();
+#else
+            val = 0;
+#endif
             break;
         case UI::LEDBindMode::Humidity:
-            val = static_cast<int>(Sensors::getHumidity());
+            val = static_cast<int>(BME280::getHumidity());
             break;
         case UI::LEDBindMode::Temperature:
-            val = static_cast<int>(Sensors::getTemp());
+            val = static_cast<int>(BME280::getTemp());
             break;
         case UI::LEDBindMode::Rain:
-            val = Sensors::getRain();
+            val = BME280::getRain();
             break;
     }
 
