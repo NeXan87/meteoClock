@@ -20,7 +20,7 @@
 #define LED_BRIGHT_MAX 10     // максимальная яркость rgb-светодиода (0-255)
 #define LED_BRIGHT_MIN 0      // минимальная яркость rgb-светодиода (0-255)
 #define LCD_BRIGHT_MAX 255    // максимальная яркость подсветки LCD
-#define LCD_BRIGHT_MIN 10     // минимальная яркость подсветки LCD
+#define LCD_BRIGHT_MIN 6     // минимальная яркость подсветки LCD
 
 // Тип светодиода
 #define LED_MODE 0  // 0 - общий катод, 1 - общий анод

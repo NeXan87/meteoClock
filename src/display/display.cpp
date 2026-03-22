@@ -186,7 +186,7 @@ void drawSensors() {
                 if (mode0scr == MainDisplayMode::CO2) LCD::setCursor(LCD_PLOT_COLUMN, 2);
                 if (mode0scr != MainDisplayMode::CO2) LCD::setCursor(LCD_PLOT_COLUMN, 0);
             }
-            LCD::printInt((int)round(dispTemp));
+            LCD::printf("%4u%", (int)round(dispTemp));
             LCD::write(239);
         } else {
             drawTemp(dispTemp, 0, 0);
@@ -199,7 +199,8 @@ void drawSensors() {
         if (mode0scr != MainDisplayMode::Humidity) {  // влажность
             LCD::setCursor(5, 2);
             if (isBig) LCD::setCursor(LCD_PLOT_COLUMN, 1);
-            LCD::printf(" %u%% ", dispHum);
+            if (isBig) LCD::printf("%4u%%", dispHum);
+            else LCD::printf(" %u%% ", dispHum);
             prevState.humidity = dispHum;
         } else {
             drawHum(dispHum, 0, 0);
@@ -213,7 +214,7 @@ void drawSensors() {
         if (mode0scr != MainDisplayMode::CO2) {  // СО2
             if (isBig) {
                 LCD::setCursor(LCD_PLOT_COLUMN, 2);
-                LCD::printf("%dp", dispCO2);
+                LCD::printf("%4dp", dispCO2);
             } else {
                 LCD::setCursor(11, 2);
                 LCD::printf("%dppm ", dispCO2);
@@ -232,7 +233,8 @@ void drawSensors() {
             if (isBig && mode0scr == MainDisplayMode::Time) LCD::setCursor(LCD_PLOT_COLUMN, 3);
             if (isBig && (mode0scr == MainDisplayMode::CO2 || mode0scr == MainDisplayMode::Temperature)) LCD::setCursor(LCD_PLOT_COLUMN, 0);
             if (isBig && mode0scr == MainDisplayMode::Humidity) LCD::setCursor(LCD_PLOT_COLUMN, 1);
-            if (!(isBig && mode0scr == MainDisplayMode::CO2)) LCD::printf("%dmm", dispPres);
+            if (isBig) LCD::printf("%4dm", dispPres);
+            else if (!(isBig && mode0scr == MainDisplayMode::CO2)) LCD::printf("%dmm", dispPres);
         } else {
             drawPres(dispPres, 0, 0);
         }
