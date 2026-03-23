@@ -6,7 +6,8 @@
 #include "config.h"
 #include "display/display.h"
 #include "drivers/button.h"
-#include "led/led-indicator.h"
+#include "drivers/led.h"
+#include "led/led-controller.h"
 #include "plot/plot.h"
 #include "ui/enums.h"
 
@@ -37,8 +38,8 @@ void init() {
         mainDisplayMode = static_cast<MainDisplayMode>(EEPROM.read(EEPROM_MAIN_DISPLAY_ADDR));
         isBigDigitsEnabled = EEPROM.read(EEPROM_BIGDIG_ADDR);
         // яркость и режим светодиода
-        LED::setBrightness(EEPROM.read(EEPROM_LED_BRIGHT_ADDR));
-        LED::setMode(static_cast<UI::LEDBindMode>(EEPROM.read(EEPROM_LED_TYPE_ADDR)));
+        LEDController::setBrightness(EEPROM.read(EEPROM_LED_BRIGHT_ADDR));
+        LEDController::setMode(static_cast<UI::LEDBindMode>(EEPROM.read(EEPROM_LED_TYPE_ADDR)));
     }
 }
 
@@ -51,17 +52,17 @@ void tick() {
             switch (static_cast<Mode>(mode)) {
                 case Mode::LED_Mode:
                     if (podMode >= LED_BIND_MODE_COUNT) podMode = 0;
-                    LED::setMode(static_cast<UI::LEDBindMode>(podMode));
+                    LEDController::setMode(static_cast<UI::LEDBindMode>(podMode));
                     isChanged = true;
                     break;
                 case Mode::LED_Bright:
                     if (podMode > LED_PRESET_MAX) podMode = 0;
-                    LED::setBrightness(podMode);
+                    LEDController::setBrightness(podMode);
                     isChanged = true;
                     break;
                 case Mode::LED_Manual:
                     if (podMode > LED_PRESET_MAX) podMode = 0;
-                    LED::setBrightness(podMode);
+                    LEDController::setBrightness(podMode);
                     isChanged = true;
                     break;
                 case Mode::Menu:
@@ -138,8 +139,8 @@ void tick() {
                     EEPROM.write(EEPROM_MAIN_DISPLAY_ADDR, static_cast<uint8_t>(mainDisplayMode));
                     EEPROM.write(EEPROM_BIGDIG_ADDR, static_cast<uint8_t>(isBigDigitsEnabled));
                     // яркость и режим светодиода
-                    EEPROM.write(EEPROM_LED_BRIGHT_ADDR, LED::getBrightness());
-                    EEPROM.write(EEPROM_LED_TYPE_ADDR, static_cast<uint8_t>(LED::getMode()));
+                    EEPROM.write(EEPROM_LED_BRIGHT_ADDR, LEDController::getBrightness());
+                    EEPROM.write(EEPROM_LED_TYPE_ADDR, static_cast<uint8_t>(LEDController::getMode()));
                     EEPROM.write(EEPROM_MAGIC_ADDR, EEPROM_MAGIC_VALUE);
                 }
                 if (podMode < 6) podMode = 1;

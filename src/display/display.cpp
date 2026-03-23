@@ -7,9 +7,9 @@
 #include "drivers/bme280.h"  // для получения данных
 #include "drivers/lcd.h"
 #include "drivers/mhz19.h"
-#include "drivers/rtc.h"        // для времени
-#include "led/led-indicator.h"  // для яркости LED в меню
-#include "plot/plot.h"          // для доступа к массивам графиков
+#include "drivers/rtc.h"         // для времени
+#include "led/led-controller.h"  // для яркости LED в меню
+#include "plot/plot.h"           // для доступа к массивам графиков
 #include "ui/enums.h"
 #include "ui/ui.h"
 
@@ -519,7 +519,7 @@ void drawMenu(uint8_t mode, uint8_t podMode, int visOnData) {
         LCD::setCursor(0, 0);
         drawBridLED();
         LCD::print(":");
-        uint8_t ledBright = LED::getBrightness();
+        uint8_t ledBright = LEDController::getBrightness();
         LCD::setCursor(0, 1);
         if (ledBright == 11) {
             LCD::print("ABTO");

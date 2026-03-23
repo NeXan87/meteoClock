@@ -6,9 +6,10 @@
 #include "drivers/bme280.h"
 #include "drivers/button.h"
 #include "drivers/lcd.h"
+#include "drivers/led.h"
 #include "drivers/mhz19.h"
 #include "drivers/rtc.h"
-#include "led/led-indicator.h"
+#include "led/led-controller.h"
 #include "plot/plot.h"
 #include "ui/ui.h"
 
@@ -47,7 +48,7 @@ void loop() {
     }
     Button::tick();
     UI::tick();
-    LED::update();
+    LEDController::update();
 
     if (now - sensorsTimer >= SENS_TIME) {
         sensorsTimer = now;

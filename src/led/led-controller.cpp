@@ -1,14 +1,16 @@
-#include "led/led-indicator.h"
+#include "led/led-controller.h"
 
 #include <Arduino.h>
 
 #include "config.h"
 #include "drivers/bme280.h"
+#include "drivers/led.h"
 #include "drivers/mhz19.h"
 #include "ui/enums.h"
 
-namespace LED {
+namespace LEDController {
 
+// Состояние контроллера
 static uint8_t brightness = LED_BRIGHT_MIN;  // 0..10 - ручная яркость
 static bool isAutoBrightness = true;         // true = авто, false = ручная
 static UI::LEDBindMode bindMode = UI::LEDBindMode::CO2;
@@ -21,58 +23,16 @@ static UI::AlertStatus alertStatus = UI::AlertStatus::Normal;
 static bool isDark = false;
 static unsigned long brightTimer = 0;
 
-void init() {
-    pinMode(LED_R, OUTPUT);
-    pinMode(LED_G, OUTPUT);
-    pinMode(LED_B, OUTPUT);
-    pinMode(LED_COM, OUTPUT);
-    analogWrite(LED_COM, 0);
-    if (DEBUG) {
-        Serial.println("LED::init called");
-        Serial.print("LED_MODE=");
-        Serial.println(LED_MODE);
-    }
-}
+// для ручного установки цвета
+static bool isManualColor = false;
+static uint8_t manualR = 0;
+static uint8_t manualG = 0;
+static uint8_t manualB = 0;
 
-static void applyColor(uint8_t r, uint8_t g, uint8_t b) {
-    // учесть общий катод/анод
-#if (LED_MODE == 0)
-    analogWrite(LED_R, r);
-    analogWrite(LED_G, g);
-    analogWrite(LED_B, b);
-#else
-    analogWrite(LED_R, 255 - r);
-    analogWrite(LED_G, 255 - g);
-    analogWrite(LED_B, 255 - b);
-#endif
-}
-
-void setColor(uint8_t r, uint8_t g, uint8_t b) {
-    applyColor(r, g, b);
-}
-
-void setMode(UI::LEDBindMode m) {
-    bindMode = m;
-}
-
-void setBrightness(uint8_t b) {
-    if (b == 11) {
-        isAutoBrightness = true;
-    } else {
-        isAutoBrightness = false;
-        brightness = b;
-        ledOn = static_cast<uint8_t>(b * b * 2.5);
-    }
-}
-
-uint8_t getBrightness() {
-    return isAutoBrightness ? 11 : brightness;
-}
-
-UI::LEDBindMode getMode() {
-    return bindMode;
-}
-
+/**
+ * Проверка яркости по фоторезистору
+ * Вызывается каждые 2 секунды
+ */
 static void checkBrightness() {
     int photoValue = analogRead(PHOTO);
 
@@ -116,22 +76,23 @@ static void checkBrightness() {
     }
 }
 
-void update() {
-    // вызываем checkBrightness каждые 2 секунды как в оригинале
-    unsigned long now = millis();
-    if (now - brightTimer >= 2000) {
-        brightTimer = now;
-        checkBrightness();
+/**
+ * Расчёт цвета на основе текущего режима и показаний датчиков
+ */
+static void calculateColor(uint8_t& r, uint8_t& g, uint8_t& b) {
+    r = 0;
+    g = 0;
+    b = 0;
+
+    // если ручной режим цвета - используем его
+    if (isManualColor) {
+        r = manualR;
+        g = manualG;
+        b = manualB;
+        return;
     }
 
-    if (DEBUG) {
-        Serial.print("LED update: brightness=");
-        Serial.print(brightness);
-        Serial.print(" ledOn=");
-        Serial.println(ledOn);
-    }
-
-    // выбор цвета в зависимости от режима и текущих показаний
+    // выбор режима и получение значения
     int val = 0;
     switch (bindMode) {
         case UI::LEDBindMode::CO2:
@@ -152,8 +113,7 @@ void update() {
             break;
     }
 
-    // простая логика: зелёный нормальный, синий средний, красный высокий
-    uint8_t r = 0, g = 0, b = 0;
+    // логика для CO2
     if (bindMode == UI::LEDBindMode::CO2) {
         if (val < NORM_CO2) {
             g = ledOn;
@@ -165,18 +125,81 @@ void update() {
             r = ledOn;
             alertStatus = UI::AlertStatus::Critical;
         }
-        if (val >= BLINK_LED_CO2 && (millis() - lastBlink > LED_BLINK_INTERVAL_MS)) {
-            isBlinking = !isBlinking;
-            lastBlink = millis();
-            alertStatus = isBlinking ? UI::AlertStatus::Blinking : UI::AlertStatus::Critical;
+
+        // проверка на мигание
+        if (val >= BLINK_LED_CO2) {
+            if (millis() - lastBlink > LED_BLINK_INTERVAL_MS) {
+                isBlinking = !isBlinking;
+                lastBlink = millis();
+            }
+            if (isBlinking) {
+                alertStatus = UI::AlertStatus::Blinking;
+            }
         }
     }
-    // остальные режимы можно реализовать аналогично
+    // TODO: добавить логику для других режимов (Temperature, Humidity, Rain)
+}
+
+void update() {
+    // вызываем checkBrightness каждые LED_BRIGHT_CHECK_INTERVAL_MS
+    unsigned long now = millis();
+    if (now - brightTimer >= LED_BRIGHT_CHECK_INTERVAL_MS) {
+        brightTimer = now;
+        checkBrightness();
+    }
+
+    if (DEBUG) {
+        Serial.print("LED update: brightness=");
+        Serial.print(brightness);
+        Serial.print(" ledOn=");
+        Serial.println(ledOn);
+    }
+
+    // расчёт цвета
+    uint8_t r, g, b;
+    calculateColor(r, g, b);
+
+    // применение цвета через драйвер
     if (isBlinking || alertStatus == UI::AlertStatus::Blinking) {
-        applyColor(0, 0, 0);
+        LED::setRawColor(0, 0, 0);
     } else {
-        applyColor(r, g, b);
+        LED::setRawColor(r, g, b);
     }
 }
 
-}  // namespace LED
+void setMode(UI::LEDBindMode m) {
+    bindMode = m;
+    isManualColor = false;
+}
+
+void setBrightness(uint8_t b) {
+    if (b == 11) {
+        isAutoBrightness = true;
+    } else {
+        isAutoBrightness = false;
+        brightness = b;
+        // расчёт ledOn для ручного режима
+        ledOn = static_cast<uint8_t>(b * b * 2.5);
+    }
+}
+
+uint8_t getBrightness() {
+    return isAutoBrightness ? 11 : brightness;
+}
+
+UI::LEDBindMode getMode() {
+    return bindMode;
+}
+
+UI::AlertStatus getAlertStatus() {
+    return alertStatus;
+}
+
+void setColor(uint8_t r, uint8_t g, uint8_t b) {
+    isManualColor = true;
+    manualR = r;
+    manualG = g;
+    manualB = b;
+}
+
+}  // namespace LEDController

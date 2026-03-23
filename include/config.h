@@ -14,13 +14,14 @@
 #define CLOCK_TICK_INTERVAL_MS 500
 
 // Яркость и автоматическое управление
-#define BRIGHT_CONTROL 1      // 0 - запретить, 1 - разрешить автоматическую регулировку
-#define BRIGHT_THRESHOLD 350  // порог для фоторезистора (0-1023)
-#define BRIGHT_HYSTERESYS 50  // гистерезис для автоматической яркости
-#define LED_BRIGHT_MAX 10     // максимальная яркость rgb-светодиода (0-255)
-#define LED_BRIGHT_MIN 0      // минимальная яркость rgb-светодиода (0-255)
-#define LCD_BRIGHT_MAX 255    // максимальная яркость подсветки LCD
-#define LCD_BRIGHT_MIN 6      // минимальная яркость подсветки LCD
+#define BRIGHT_CONTROL 1                   // 0 - запретить, 1 - разрешить автоматическую регулировку
+#define BRIGHT_THRESHOLD 250               // порог для фоторезистора (0-1023)
+#define BRIGHT_HYSTERESYS 50               // гистерезис для автоматической яркости
+#define LED_BRIGHT_CHECK_INTERVAL_MS 2000  // интервал проверки яркости (мс)
+#define LED_BRIGHT_MAX 10                  // максимальная яркость rgb-светодиода (0-255)
+#define LED_BRIGHT_MIN 0                   // минимальная яркость rgb-светодиода (0-255)
+#define LCD_BRIGHT_MAX 255                 // максимальная яркость подсветки LCD
+#define LCD_BRIGHT_MIN 6                   // минимальная яркость подсветки LCD
 
 // Тип светодиода
 #define LED_MODE 0  // 0 - общий катод, 1 - общий анод
